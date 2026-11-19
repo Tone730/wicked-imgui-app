@@ -14,6 +14,8 @@
 // (renderer, main process and Node-based regression suite).
 
 import { createProject, createPage, createWidget, applyPreset, PRESETS } from './model.js';
+import { HELLO_THEME_PALETTES, HELLO_THEME_NAMES } from './helloThemes.js';
+import { NEW_KITS, NEW_KIT_CREDITS } from './newKits.js';
 
 /** Map a sampled control onto the closest Wicked widget + starting props. */
 export const CONTROL_RECIPES = {
@@ -1578,83 +1580,20 @@ export const UI_KITS = {
           { kind: 'thin-slider', label: 'Value multiplier FrameBg', min: 0, max: 10, value: 1 },
         ],
       },
-      {
-        id: 'hi_material', name: 'MaterialFlat',
-        controls: paletteRows([
-          ['Text = #D4D8E0', '#D4D8E0'], ['WindowBg = #2C313C', '#2C313C'],
-          ['FrameBg = #1B1D2380', '#1B1D2380'], ['FrameBgActive = #4F9FEE', '#4F9FEE'],
-          ['Button = #5A6B7180', '#5A6B7180'], ['ButtonHovered = #272D36', '#272D36'],
-          ['CheckMark = #4F9FEE', '#4F9FEE'], ['Header = #404859', '#404859'],
-          ['TabSelected = #3871A9', '#3871A9'], ['Border = #3C5686', '#3C5686'],
-          ['ScrollbarGrab = #888888', '#888888'], ['Separator = #6D6D7F80', '#6D6D7F80'],
-        ]),
-      },
-      {
-        id: 'hi_photoshop', name: 'PhotoshopStyle',
-        controls: paletteRows([
-          ['Text = #FFFFFF', '#FFFFFF'], ['TextDisabled = #7F7F7F', '#7F7F7F'],
-          ['WindowBg = #2D2D2D', '#2D2D2D'], ['PopupBg = #4F4F4F', '#4F4F4F'],
-          ['FrameBg = #3C3C3C', '#3C3C3C'], ['Button = #FFFFFF23', '#FFFFFF23'],
-          ['Header = #4F4F4F', '#4F4F4F'], ['CheckMark = #FFFFFF', '#FFFFFF'],
-          ['Separator = #4D4D4D', '#4D4D4D'], ['Border = #5C5C5CA8', '#5C5C5CA8'],
-          ['TabSelected = #393939', '#393939'], ['ScrollbarGrab = #585858', '#585858'],
-        ]),
-      },
-      {
-        id: 'hi_gray', name: 'GrayVariations / MicrosoftStyle',
-        controls: paletteRows([
-          ['Text = #191919', '#191919'], ['WindowBg = #F2F2F2', '#F2F2F2'],
-          ['FrameBg = #FFFFFF', '#FFFFFF'], ['Button = #DBDBDB', '#DBDBDB'],
-          ['Header = #DBDBDB', '#DBDBDB'], ['CheckMark = #191919', '#191919'],
-          ['TitleBgActive = #3268AD', '#3268AD'], ['ScrollbarGrab = #AFAFAF', '#AFAFAF'],
-          ['Border = #999999', '#999999'], ['MenuBarBg = #DBDBDB', '#DBDBDB'],
-          ['TabSelected = #96B3D6', '#96B3D6'], ['Tab = #C7C9CFDB', '#C7C9CFDB'],
-        ]),
-      },
-      {
-        id: 'hi_cherry', name: 'Cherry',
-        controls: paletteRows([
-          ['Text = #DBEDE3E0', '#DBEDE3E0'], ['WindowBg = #21232B', '#21232B'],
-          ['FrameBg = #333844', '#333844'], ['FrameBgHovered = #74324CC7', '#74324CC7'],
-          ['Button = #CD73C247', '#CD73C247'], ['Header = #74324CC2', '#74324CC2'],
-          ['CheckMark = #B53844', '#B53844'], ['Border = #853F7D9E', '#853F7D9E'],
-          ['TabSelected = #A02E93', '#A02E93'], ['ScrollbarGrab = #8D4D85', '#8D4D85'],
-          ['SliderGrab = #77C4D3C7', '#77C4D3C7'], ['TitleBgActive = #801341', '#801341'],
-        ]),
-      },
-      {
-        id: 'hi_darcula', name: 'Darcula / DarculaDarker',
-        controls: paletteRows([
-          ['Text = #BBBBBB', '#BBBBBB'], ['WindowBg = #3C3F41F0', '#3C3F41F0'],
-          ['FrameBg = #2B2B2B8A', '#2B2B2B8A'], ['Button = #555A5CDE', '#555A5CDE'],
-          ['Header = #555A5CB5', '#555A5CB5'], ['CheckMark = #E5E5E5D4', '#E5E5E5D4'],
-          ['TabSelected = #2C5C99', '#2C5C99'], ['ScrollbarGrab = #716E8C', '#716E8C'],
-          ['Border = #88888880', '#88888880'], ['MenuBarBg = #45494ACC', '#45494ACC'],
-          ['FrameBgActive = #787878AB', '#787878AB'], ['TextSelectedBg = #2F65CAE6', '#2F65CAE6'],
-        ]),
-      },
-      {
-        id: 'hi_sodark', name: 'SoDark accents / BlackIsBlack / WhiteIsWhite',
-        controls: paletteRows([
-          ['Text = #FFFFFF', '#FFFFFF'], ['WindowBg = #1A1A1A', '#1A1A1A'],
-          ['PopupBg = #303030EB', '#303030EB'], ['FrameBg = #4040408A', '#4040408A'],
-          ['Button = #4D4D4D9E', '#4D4D4D9E'], ['Header = #363636', '#363636'],
-          ['CheckMark = #54ABDB', '#54ABDB'], ['TabSelected = #333333F5', '#333333F5'],
-          ['ScrollbarGrab = #575757C7', '#575757C7'], ['Border = #63636396', '#63636396'],
-          ['Button (black accent) = #1E1E1E', '#1E1E1E'], ['WindowBg (white) = #FFFFFF', '#FFFFFF'],
-        ]),
-      },
-      {
-        id: 'hi_light', name: 'LightRounded',
-        controls: paletteRows([
-          ['Text = #000000', '#000000'], ['WindowBg = #F5F3F3', '#F5F3F3'],
-          ['PopupBg = #FFFFFFFA', '#FFFFFFFA'], ['FrameBg = #FFFFFF', '#FFFFFF'],
-          ['Button = #4296FA66', '#4296FA66'], ['Header = #4296FA4F', '#4296FA4F'],
-          ['CheckMark = #4296FA', '#4296FA'], ['TabSelected = #97B9E1', '#97B9E1'],
-          ['ScrollbarGrab = #AFAFAFCC', '#AFAFAFCC'], ['Border = #0000004D', '#0000004D'],
-          ['TitleBgActive = #D1D1D1', '#D1D1D1'], ['TableHeaderBg = #C6DDF9', '#C6DDF9'],
-        ]),
-      },
+      // One board per named theme. Every swatch is an exact literal (or a
+      // documented deterministic transform) from the upstream source files.
+      ...HELLO_THEME_NAMES.map((themeName) => {
+        const theme = HELLO_THEME_PALETTES[themeName];
+        return {
+          id: 'hi_' + String(themeName).replace(/[^A-Za-z0-9_]/g, '').toLowerCase(),
+          name: themeName,
+          controls: [
+            { kind: 'text', label: theme.note },
+            { kind: 'text', label: 'Exact ImGuiCol palette — ' + themeName },
+            ...paletteRows(theme.colors),
+          ],
+        };
+      }),
       {
         id: 'hi_demo', name: 'Classic / Docking demo widgets',
         controls: [
@@ -1676,16 +1615,136 @@ export const UI_KITS = {
     chrome: ['ImGuiColorsClassic', 'ImGuiColorsLight', 'ImGuiColorsDark', 'MaterialFlat', 'PhotoshopStyle', 'GrayVariations', 'GrayVariations_Darker', 'MicrosoftStyle', 'Cherry', 'Darcula', 'DarculaDarker', 'LightRounded', 'SoDark_AccentBlue', 'SoDark_AccentYellow', 'SoDark_AccentRed', 'BlackIsBlack', 'WhiteIsWhite', 'Theme Tweaks', 'Available Themes', 'Style Editor'],
     keybinds: ['17 themes + ImGuiTheme_Count sentinel', 'Theme selector cycles i % nbThemes starting at index 3'],
   },
+
+  // Five additional MIT-licensed design systems (v2.9.0). Kept in a dedicated
+  // data module so the exact source-derived float RGBA values stay auditable.
+  ...NEW_KITS,
 };
+
+/* ------------------------------------------------------------------ *
+ * Attribution / licensing metadata.
+ *
+ * Values here are transcribed from each source's own LICENSE/README or,
+ * for the user-supplied local archives, recorded as "source sample" because
+ * no open-source licence was present in the archive. Nothing is invented:
+ * where a source ships no licence or author we say so explicitly. This
+ * metadata drives the in-app Credits panel and the generated credits.h.
+ * ------------------------------------------------------------------ */
+export const KIT_CREDITS = {
+  'kali-dark': {
+    license: 'Source sample (no licence in archive)', repo: 'KaliLoader/SRC/main.cpp (local archive)',
+    author: 'Kali.dev (archive author not stated)',
+    attribution: 'Palette, fonts and control labels transcribed by static analysis from the supplied KaliLoader archive. No code was copied or executed.',
+  },
+  'cloudy-light': {
+    license: 'Source sample (no licence in archive)', repo: 'cloudy-ui/cloudy-ui/main.cpp (local archive)',
+    author: 'cloudy-ui (archive author not stated)',
+    attribution: 'Palette, fonts, pill geometry and labels transcribed by static analysis from the supplied cloudy-ui archive. No code was copied or executed.',
+  },
+  'givenchy-gold': {
+    license: 'Source sample (no licence in archive)', repo: 'Givenchy/overlay/gui.cpp + gui/settings/* (local archive)',
+    author: 'Givenchy (archive author not stated)',
+    attribution: 'Gold palette, tab/control strings and settings layout transcribed by static analysis from the supplied Givenchy archive. No code was copied or executed.',
+  },
+  'eon-wtf': {
+    license: 'Source sample (password-protected archive)', repo: 'Eon_Fortnite_External_Remake.zip / ship/Fortnite_Menu_2_Syntax (local archive)',
+    author: 'Eon.WTF remake (archive author not stated)',
+    attribution: 'White-on-charcoal palette and exact tab/page strings transcribed by static analysis only; the password-protected archive was never executed.',
+  },
+  'fortnite-external': {
+    license: 'Source sample (password-protected archive)', repo: 'Random_Remake.zip / ship/Fortnite_External_Remake (local archive)',
+    author: 'Fortnite External remake (archive author not stated)',
+    attribution: 'Purple palette, Poppins fonts, thin sliders and control strings transcribed by static analysis only; the password-protected archive was never executed.',
+  },
+  'fn-external': {
+    license: 'Source sample (no licence in archive)', repo: '7prwqxn (1).rar / hackermarket_ui / ui/pages.cpp + ui/theme.h (local archive)',
+    author: 'Hackermarket UI (archive author not stated)',
+    attribution: 'Red palette, Outfit icons and weapon/config strings transcribed by static analysis from the supplied archive. No code was copied or executed.',
+  },
+  'loader-template': {
+    license: 'Source sample (no licence in archive)', repo: 'project name.rar / examples/example_win32_directx9/main.cpp + main.h (local archive)',
+    author: 'project name example (archive author not stated)',
+    attribution: 'Orange-on-black loader scaffold transcribed by static analysis from the supplied archive. Based on Dear ImGui example layout (MIT, Omar Cornut).',
+  },
+  'hat-ui': {
+    license: 'Source sample (no licence in archive)', repo: '7505bf9.zip / hat / examples/example_win32_directx11/main.cpp + menu_i.cpp (local archive)',
+    author: 'HAT UI (archive author not stated)',
+    attribution: 'Periwinkle palette, CATEGORY > MODULE groups and control strings transcribed by static analysis from the supplied archive. No code was copied or executed.',
+  },
+  'lazyui-combat': {
+    license: 'Source sample (no licence in archive)', repo: 'free-imgui-fw.iannis-main (1).zip / free-imgui / Menu/generated/* (local archive)',
+    author: 'Lazy UIs / merkurydev (archive author per premade metadata)',
+    attribution: 'Green dashboard palette, 3-column cards and switch/segmented labels transcribed by static analysis from the supplied archive. No code was copied or executed.',
+  },
+  'imjson-demo': {
+    license: 'MIT', repo: 'https://github.com/moleium/imjson',
+    author: '2023 Mole',
+    attribution: 'ImJson — Copyright (c) 2023 Mole. Licensed under the MIT License. Palette and demo control strings transcribed from example/main.cpp and include/imjson.*.',
+  },
+  'vision-menu': {
+    license: 'MIT', repo: 'https://github.com/SharimAli/imgui-menu-clone',
+    author: '2026 Sharim / GHX4T',
+    attribution: 'imgui-menu-clone — MIT License, Copyright (c) 2026 Sharim / GHX4T. Purple VISION overlay palette and tab strings transcribed from assets/template and ui/*.',
+  },
+  'dear-imgui-styles': {
+    license: 'MIT (upstream snippets)', repo: 'https://github.com/GraphicsProgramming/dear-imgui-styles',
+    author: '2022 Graphics Programming; individual palette authors credited in source',
+    attribution: 'Style snippets from dear-imgui-styles (MIT). Individual palettes are credited in the source README: Cinder, Adobe Spectrum, enemymouse, ledSynthmaster, dougblinks.',
+  },
+  'imgui-candy': {
+    license: 'MIT', repo: 'https://github.com/Raais/ImguiCandy',
+    author: '2021 Raais N.',
+    attribution: 'ImguiCandy — Copyright (c) 2021 Raais N. Licensed under the MIT License. IV4 colour constants and candy palette transcribed from ImCandy/candy.h and README.md.',
+  },
+  'untitled-theme-editor': {
+    license: 'MIT', repo: 'https://github.com/MadLadSquad/UntitledImGuiTheme',
+    author: '2023-2026 Heapforge Ltd.',
+    attribution: 'UntitledImGuiTheme — MIT License, Copyright (c) 2023-2026 Heapforge Ltd. Colour-key list, style variables and editor strings transcribed from UTheme.hpp/cpp and Common.h.',
+  },
+  'clean-menu': {
+    license: 'MIT (upstream Dear ImGui 2014-2022 Omar Cornut)', repo: 'https://github.com/vayn1337/Clean-imgui-menu',
+    author: 'vayn1337; upstream Dear ImGui by Omar Cornut',
+    attribution: 'Clean-imgui-menu (MIT) builds on Dear ImGui — Copyright (c) 2014-2022 Omar Cornut. Red palette, Segue/ico font notes and menu strings transcribed from example main.cpp and imgui_draw.cpp.',
+  },
+  'lumin-menu': {
+    license: 'MIT', repo: 'https://github.com/poncippg-spec/Lumin-Free-Imgui-Menu',
+    author: '2026 Lumin contributors',
+    attribution: 'Lumin Free ImGui Menu — MIT License, Copyright (c) 2026 Lumin contributors. Periwinkle palette, license-gate strings and tab labels transcribed from framework/gui.cpp, settings/colors.h and widgets/widgets.cpp.',
+  },
+  'hello-imgui-themes': {
+    license: 'MIT', repo: 'https://github.com/pthom/hello_imgui',
+    author: '2019-2020 Pascal Thomet; child themes credited in source',
+    attribution: 'hello_imgui — Copyright (c) 2019-2020 Pascal Thomet. MIT License. Sub-theme authors credited in source: Material Flat by ImJC1C, Photoshop by Derydoca, Cherry by r-lyeh, Darcula by ice1000, LightRounded from ImThemes. Exact palettes transcribed from imgui_theme.cpp/h.',
+  },
+  ...NEW_KIT_CREDITS,
+};
+
+// Attach attribution to every kit so getKit()/listKits()/exports share one shape.
+for (const [id, credit] of Object.entries(KIT_CREDITS)) {
+  const kit = UI_KITS[id];
+  if (kit) Object.assign(kit, credit);
+}
 
 export const UI_KIT_IDS = Object.keys(UI_KITS);
 
 export function listKits() {
-  return UI_KIT_IDS.map((id) => ({
-    id, name: UI_KITS[id].name, summary: UI_KITS[id].summary,
-    preset: UI_KITS[id].preset, premade: UI_KITS[id].premade,
-    screens: UI_KITS[id].screens.length,
-  }));
+  return UI_KIT_IDS.map((id) => {
+    const k = UI_KITS[id];
+    return {
+      id, name: k.name, summary: k.summary,
+      preset: k.preset, premade: k.premade,
+      screens: k.screens.length,
+      license: k.license, repo: k.repo, author: k.author, attribution: k.attribution,
+    };
+  });
+}
+
+/** One-line-per-kit attribution summary used by the Credits panel and credits.h. */
+export function kitCreditsText() {
+  return UI_KIT_IDS.map((id) => {
+    const k = UI_KITS[id];
+    return `${k.name} — ${k.author} (${k.license}). Source: ${k.repo}. ${k.attribution || ''}`.trim();
+  }).join('\n');
 }
 
 export function getKit(id) {
@@ -1747,6 +1806,11 @@ export function kitSuggestions() {
     'Recreate the red Evicted Clean ImGui menu titled Hola with 9 icon tabs and Slider Intager',
     'Build the periwinkle Lumin control panel with a license gate and Player/Combat/Visuals tabs',
     'Showcase the 17 hello_imgui themes with the Theme Tweaks sliders and MaterialFlat palette',
+    'Open the ImThemes browser with Classic, Dark, Light and Cherry palettes',
+    'Build the Cupertino light/dark palette with macOS system and accent colours',
+    'Showcase the Rust imgui_styles Embrace the Darkness and Dracula boards',
+    'Recreate the CPStyling.lua red and cyan theme board with custom CP controls',
+    'Show the ImKit blueprint, pastel-pop and sticker worlds',
     'Add a "Skeletons JointsTTTT" checkbox from the HAT kit',
     'Add a "Maximum range" slider from the LazyUI combat kit',
     'Add an "Aimbot Smoothing" slider from the Hackermarket kit',
@@ -1923,6 +1987,8 @@ export function buildKitProject(kitId, options = {}) {
     return page;
   });
   project.startPage = project.pages[0]?.id || 'main';
+  // Provenance for the Project Doctor and generated credits; additive only.
+  project.kit = kit.id;
   return project;
 }
 

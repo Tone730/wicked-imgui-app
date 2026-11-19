@@ -134,6 +134,31 @@ for (const language of ['cpp', 'csharp', 'rust']) {
   });
 }
 
+for (const language of ['cpp', 'csharp', 'rust']) {
+  check('theme + credits export ' + language, () => {
+    const project = model.createProject({ name: 'ThemeTest', language });
+    model.applyPreset(project, 'kali-dark');
+    const files = codegen.generateProject(project, {});
+    const expected = codegen.GENERATED_THEME_FILES[language];
+    if (!expected || expected.length !== 2) return 'no descriptor';
+    for (const p of expected) {
+      const f = files.find((x) => x.path === p);
+      if (!f || typeof f.content !== 'string' || !f.content.trim()) return 'missing ' + p;
+    }
+    const theme = files.find((x) => x.path === expected[0]).content;
+    if (!/windowBg|WINDOW_BG/i.test(theme)) return 'no palette constant';
+    const credits = files.find((x) => x.path === expected[1]).content;
+    if (!credits.includes('MIT') || !credits.includes('Source:')) return 'credits missing attribution';
+    return true;
+  });
+}
+check('ui-only export whitelist includes theme + credits headers', () => {
+  const mainSrc = readFileSync('C:/Users/Wick/WickedImguiMaker/app/main.cjs', 'utf8');
+  const builderSrc = readFileSync('C:/Users/Wick/WickedImguiMaker/app/src/main/builder.cjs', 'utf8');
+  return mainSrc.includes("'theme.h'") && mainSrc.includes("'credits.h'")
+    && builderSrc.includes("'theme.h'") && builderSrc.includes("'credits.h'");
+});
+
 // ---- 5. Project Doctor still works -----------------------------------------
 check('doctor healthy', () => {
   const p = templatesMod.buildFromTemplate({ name: 'Healthy', type: 'window', language: 'cpp', backend: 'dx11', template: 'blank' });
@@ -174,6 +199,22 @@ check('doctor detects unknown effect', () => {
   p.pages = [{ id: 'p1', name: 'One', widgets: [] }];
   p.background = { ...(p.background || {}), effect: 'not-an-effect' };
   return doctor.checkProject(p).some((f) => /unknown background effect/i.test(f.message));
+});
+check('doctor detects broken kit reference', () => {
+  const p = uikit.buildKitProject('kali-dark');
+  p.kit = 'not-a-kit';
+  return doctor.checkProject(p).some((f) => /unknown UI kit/i.test(f.message));
+});
+check('doctor detects broken preset reference', () => {
+  const p = uikit.buildKitProject('cupertino-ui');
+  p.style = { ...(p.style || {}), preset: 'not-a-preset' };
+  return doctor.checkProject(p).some((f) => /unknown preset/i.test(f.message));
+});
+check('doctor accepts every shipped kit project', () => {
+  return uikit.listKits().every((k) => {
+    const p = uikit.buildKitProject(k.id);
+    return p && doctor.checkProject(p).filter((f) => f.severity === 'error').length === 0;
+  });
 });
 
 // ---- 6. Offline account provider -------------------------------------------
@@ -301,9 +342,39 @@ for (const [label, prompt, verify] of advancedAiCases) {
   });
 }
 
+// Batch AI intents operate across every page, not just the focused one.
+const batchAiCases = [
+  ['rename across pages', 'rename all "Play" to "Launch" across every page',
+    (p) => p.pages.every((pg) => pg.widgets.every((w) => !/play/i.test(w.text || '')))
+      && p.pages.some((pg) => pg.widgets.some((w) => /launch/i.test(w.text || '')))],
+  ['restyle all pages', 'restyle all pages with the cyber soda theme',
+    (p) => p.style.accent.toLowerCase() === model.PRESETS['cyber-soda'].style.accent.toLowerCase()],
+  ['convert widget types', 'convert all buttons to switches across all pages',
+    (p) => p.pages.flatMap((pg) => pg.widgets).filter((w) => w.type === 'button').length === 0
+      && p.pages.some((pg) => pg.widgets.some((w) => w.type === 'switch'))],
+];
+for (const [label, prompt, verify] of batchAiCases) {
+  const proj = model.createProject({ name: 'Batch AI ' + label });
+  proj.pages = [
+    { id: 'main', name: 'Main', widgets: [
+      model.createWidget('button', 'b1', 10, 10, { text: 'Play now' }),
+      model.createWidget('checkbox', 'c1', 10, 50, { text: 'Enable Play sounds' }),
+    ] },
+    { id: 'two', name: 'Two', widgets: [model.createWidget('button', 'b2', 10, 10, { text: 'Play again' })] },
+  ];
+  proj.startPage = 'main';
+  const ctx = JSON.stringify(aiShared.compactProject(proj)) + '\n\nRequest: ' + prompt;
+  const res = await ai.run({ provider: 'local', json: true, messages: [{ role: 'user', content: ctx }] });
+  check('batch AI ' + label, () => {
+    const patch = aiShared.parseAiJson(res.text);
+    return verify(aiShared.applyAiResult(proj, patch).project);
+  });
+}
+
 // ---- 8c. Source-derived UI kit catalog + offline AI ------------------------
-const kitIds = ['kali-dark', 'cloudy-light', 'givenchy-gold', 'eon-wtf', 'fortnite-external', 'fn-external', 'loader-template', 'hat-ui', 'lazyui-combat', 'imjson-demo', 'vision-menu', 'dear-imgui-styles', 'imgui-candy', 'untitled-theme-editor', 'clean-menu', 'lumin-menu', 'hello-imgui-themes'];
-ok('UI kit registry', uikit.UI_KIT_IDS.length === 17 && kitIds.every((id) => uikit.UI_KIT_IDS.includes(id)));
+const kitIds = ['kali-dark', 'cloudy-light', 'givenchy-gold', 'eon-wtf', 'fortnite-external', 'fn-external', 'loader-template', 'hat-ui', 'lazyui-combat', 'imjson-demo', 'vision-menu', 'dear-imgui-styles', 'imgui-candy', 'untitled-theme-editor', 'clean-menu', 'lumin-menu', 'hello-imgui-themes', 'imthemes-browser', 'cupertino-ui', 'imgui-styles-rs', 'cpstyling-lua', 'imkit-design-system'];
+ok('UI kit registry', uikit.UI_KIT_IDS.length === 22 && kitIds.every((id) => uikit.UI_KIT_IDS.includes(id)));
+check('every UI kit carries attribution metadata', () => uikit.listKits().every((k) => k.license && k.repo && k.author && k.attribution));
 check('UI kit recipes target real widgets/actions', () => Object.values(uikit.CONTROL_RECIPES)
   .every((r) => (r.widget && model.WIDGETS[r.widget]) || (r.action && model.ACTIONS[r.action])));
 check('UI kit presets all exist', () => kitIds.every((id) => {
@@ -342,6 +413,19 @@ check('new online kits keep exact source strings', () => {
     && grab('imgui-candy').includes('Theme_Cyberpunk')
     && grab('untitled-theme-editor').includes('DestructiveColor')
     && grab('dear-imgui-styles').includes('StyleColorsSpectrum');
+});
+check('v2.9 kits keep exact source-derived values', () => {
+  const grab = (id) => JSON.stringify(uikit.getKit(id));
+  return grab('imthemes-browser').includes('Cherry (r-lyeh)')
+    && grab('imthemes-browser').includes('Refresh Feed')
+    && grab('cupertino-ui').includes('#FF5F57')
+    && grab('cupertino-ui').includes('SystemPurple dark = #BF5AF2')
+    && grab('imgui-styles-rs').includes('Embrace the Darkness')
+    && grab('imgui-styles-rs').includes('[0.74,0.58,0.98,1.0]')
+    && grab('cpstyling-lua').includes('CPToggleOn')
+    && grab('cpstyling-lua').includes('{0.34,0.95,0.98,1.00}')
+    && grab('imkit-design-system').includes('elevation.offset = 2 2')
+    && grab('imkit-design-system').includes('show_schedule_page');
 });
 check('lexicon patch inserts a new-kit sampled control', () => {
   const proj = model.createProject({ name: 'Lexicon2' });
@@ -397,7 +481,7 @@ check('new design systems detected in AI requests', () => {
   return ids.includes('hat-ui') && ids.includes('lazyui-combat');
 });
 check('premade registry builds every template', () => {
-  if (premade.PREMADE_TEMPLATES.length !== 20) return 'expected 20 templates';
+  if (premade.PREMADE_TEMPLATES.length !== 25) return 'expected 25 templates';
   return premade.PREMADE_TEMPLATES.every((t) => {
     try { const p = premade.buildPremade(t.id); return p && p.pages && p.pages.length > 0; }
     catch { return false; }

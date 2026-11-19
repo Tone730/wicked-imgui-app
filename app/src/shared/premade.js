@@ -647,6 +647,36 @@ export const PREMADE_TEMPLATES = [
     tags: ['theme', 'palette', 'reference', 'demo', 'exact'], size: [900, 620],
     approximate: false, build: () => buildKitProject('hello-imgui-themes'),
   },
+  {
+    id: 'imthemes-browser', name: 'ImThemes Browser', author: 'Patitotective/ImThemes (MIT, static source)',
+    description: 'Nim theme browser boards: Classic (ocornut), Dark/Light (dougbinks) and Cherry (r-lyeh) exact rgba() palettes, plus the File/Edit/About menu and Edit/Browse sidebar strings. 1500x700.',
+    tags: ['theme', 'palette', 'browser', 'reference', 'exact'], size: [1500, 700],
+    approximate: false, build: () => buildKitProject('imthemes-browser'),
+  },
+  {
+    id: 'cupertino-ui', name: 'Cupertino UI (imgui-apple)', author: 'MisterJerkins/imgui-apple (MIT, static source)',
+    description: 'macOS-style palette reference: exact MacLight/MacDark hexes, nine system colours, eight accent colours and traffic-light swatches transcribed from Theme.cpp.',
+    tags: ['theme', 'palette', 'macos', 'light', 'exact'], size: [1200, 760],
+    approximate: false, build: () => buildKitProject('cupertino-ui'),
+  },
+  {
+    id: 'imgui-styles-rs', name: 'imgui_styles (Rust)', author: 'iddm/imgui_styles (MIT, static source)',
+    description: 'Rust style patches Embrace the Darkness and Dracula with exact float RGBA boards and the numeric style variables; Roboto-Regular 16px reference.',
+    tags: ['theme', 'palette', 'rust', 'dark', 'exact'], size: [900, 620],
+    approximate: false, build: () => buildKitProject('imgui-styles-rs'),
+  },
+  {
+    id: 'cpstyling-lua', name: 'CPStyling.lua', author: 'Nats-ji/CPStyling.lua (MIT, static source)',
+    description: 'Red-on-charcoal Lua theme board with cyan nav/toggle accents and the custom CPButton/CPToggle/CPToolTip2/CPCollapsingHeader roles transcribed from default.lua.',
+    tags: ['theme', 'palette', 'lua', 'red', 'exact'], size: [900, 620],
+    approximate: false, build: () => buildKitProject('cpstyling-lua'),
+  },
+  {
+    id: 'imkit-design-system', name: 'ImKit Design System', author: 'AokiMotohide/imgui-modern-kit (MIT, static source)',
+    description: 'Declarative .theme worlds blueprint, pastel-pop and sticker with exact brand/corner/stroke/elevation tokens, plus the gallery page filenames.',
+    tags: ['theme', 'palette', 'design-system', 'token', 'exact'], size: [1200, 760],
+    approximate: false, build: () => buildKitProject('imkit-design-system'),
+  },
 ];
 
 export function buildPremade(id) {

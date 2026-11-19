@@ -8,7 +8,7 @@ import { api } from '../api.js';
 import { modal, toast, promptDialog } from '../ui.js';
 import { t } from '../i18n.js';
 import { applyProfile, LOADER_TYPES, GRAPHICS_APIS, COMPAT_FLAGS } from '../../../shared/loaders.js';
-import { listKits, getKit, buildKitProject, kitSuggestions, CONTROL_RECIPES } from '../../../shared/uikit.js';
+import { listKits, getKit, buildKitProject, kitSuggestions, CONTROL_RECIPES, kitCreditsText } from '../../../shared/uikit.js';
 
 const KINDS = [
   ['cpp', 'C++'], ['csharp', 'C#'], ['rust', 'Rust'], ['web', 'Web / JS'],
@@ -324,11 +324,39 @@ export function renderV24(V, X) {
     return section('UI design systems', kids);
   }
 
+  /* ------------------------------ Credits -------------------------------- */
+  function creditsSection() {
+    const kits = listKits();
+    const kids = [sub('Attribution for every bundled design system. Palettes, fonts and control strings were transcribed by static analysis; no source archive was executed. Licences below are transcribed from each source where one was present.')];
+    for (const kit of kits) {
+      const meta = h('div.small', { style: { marginTop: '2px' } },
+        h('span.muted', String(kit.author || 'Unknown author') + ' · ' + String(kit.license || 'Unspecified')));
+      if (kit.repo) {
+        const isUrl = /^https?:\/\//i.test(kit.repo);
+        meta.appendChild(h('span.muted', ' · '));
+        if (isUrl) {
+          meta.appendChild(h('a', { href: kit.repo, target: '_blank', rel: 'noopener noreferrer' }, kit.repo));
+        } else {
+          meta.appendChild(h('span', kit.repo));
+        }
+      }
+      kids.push(h('div.v24-credit', { style: { borderTop: '1px solid #ffffff18', padding: '8px 0' } },
+        h('strong', kit.name), meta,
+        kit.attribution ? h('p.muted.small', kit.attribution) : null));
+    }
+    // Keep a plain-text form available for the generated credits.h and copy/paste.
+    kids.push(h('details.small', { style: { marginTop: '8px' } },
+      h('summary', 'Plain-text credits'),
+      h('pre.muted', { style: { whiteSpace: 'pre-wrap', fontSize: '11px' } }, kitCreditsText())));
+    return section('Credits & attribution', kids);
+  }
+
   /* ------------------------------ Build --------------------------------- */
   function build() {
     clear(V);
     V.appendChild(visionSection());
     V.appendChild(uiKitSection());
+    V.appendChild(creditsSection());
     V.appendChild(premadeSection());
     V.appendChild(librarySection());
     V.appendChild(loaderSection());

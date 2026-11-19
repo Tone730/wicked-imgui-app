@@ -1,4 +1,4 @@
-import{allWidgets,ACTIONS,assetIndex,ID_RE,WIDGETS,PRESETS,EFFECTS}from'./model.js';
+import{allWidgets,ACTIONS,assetIndex,ID_RE,WIDGETS,PRESETS,EFFECTS}from'./model.js';import{UI_KITS}from'./uikit.js';
 const WIDGET_REFS=new Set(['target','userField','passField','keyField','widget','widgetId']),PAGE_REFS=new Set(['page','pageId','targetPage']),RANK={'error':0x0,'warning':0x1,'info':0x2},label=w=>w?.['id']?('"'+w['id']+'"'):'(unnamed)',markerCount=(s,re)=>(String(s??'')['match'](re)||[])['length'];
 export function checkProject(project){
  const out=[];
@@ -63,6 +63,8 @@ export function checkProject(project){
   pageSeen['add'](pg['id']);
  }
  if(project['preset']&&!PRESETS[project['preset']])out.push({severity:'warning',message:'Project uses unknown theme "'+String(project['preset'])+'".',fix:'Choose a theme from the Visual tab.'});
+ if(project['style']?.['preset']&&!PRESETS[project['style']['preset']])out.push({severity:'warning',message:'Project style references unknown preset "'+String(project['style']['preset'])+'".',fix:'Reapply a theme preset from the Visual tab.'});
+ if(project['kit']&&!UI_KITS[project['kit']])out.push({severity:'warning',message:'Project references unknown UI kit "'+String(project['kit'])+'".',fix:'Rebuild from an available UI kit or clear the kit reference.'});
  if(project['background']?.['effect']&&!EFFECTS['includes'](project['background']['effect']))out.push({severity:'warning',message:'Project uses unknown background effect "'+String(project['background']['effect'])+'".',fix:'Choose an effect from the Visual tab.'});
  const assets=Array['isArray'](project['assets'])?project['assets']:[],assetCheck=(id,kind,where,ref)=>{
   if(!id)return;
