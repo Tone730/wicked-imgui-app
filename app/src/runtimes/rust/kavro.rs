@@ -232,6 +232,19 @@ impl Default for Kavro {
     }
 }
 
+// Every generated widget call has this shape; all return bool so
+// `if k.button(...) { ... }` actions keep compiling.
+macro_rules! stub_widgets {
+    ($($name:ident),* $(,)?) => {
+        $(
+            pub fn $name(&mut self, _ui: &Ui, _id: &str, _text: &str,
+                         _pos: [f32; 2], _size: [f32; 2]) -> bool {
+                false
+            }
+        )*
+    };
+}
+
 impl Kavro {
     pub fn new() -> Self {
         Self {
@@ -293,19 +306,6 @@ impl Kavro {
     pub fn minimize(&mut self) {}
     pub fn close(&mut self) {}
     pub fn fullscreen(&mut self) {}
-
-    // Every generated widget call has this shape; all return bool so
-    // `if k.button(...) { ... }` actions keep compiling.
-    macro_rules! stub_widgets {
-        ($($name:ident),* $(,)?) => {
-            $(
-                pub fn $name(&mut self, _ui: &Ui, _id: &str, _text: &str,
-                             _pos: [f32; 2], _size: [f32; 2]) -> bool {
-                    false
-                }
-            )*
-        };
-    }
 
     stub_widgets!(
         text, button, checkbox, switch, slider, input, combo, progress,
