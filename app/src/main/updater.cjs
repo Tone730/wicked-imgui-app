@@ -37,6 +37,13 @@ function isLocalUrl(value) {
   } catch { return false; }
 }
 
+function isInsecureUrl(value) {
+  try {
+    const u = new URL(String(value || ''));
+    return u.protocol === 'http:' && !isLocalUrl(u.href);
+  } catch { return false; }
+}
+
 function safeFile(value, fallback) {
   const base = path.basename(String(value || '')).replace(/[^A-Za-z0-9._-]+/g, '-');
   return base || fallback;
@@ -134,6 +141,11 @@ function createUpdater(options) {
       err.code = 'bad_url';
       throw err;
     }
+    if (isInsecureUrl(url)) {
+      const err = new Error('insecure_url');
+      err.code = 'insecure_url';
+      throw err;
+    }
 
     const file = safeFile(raw.file || raw.path || url.split('/').pop(), 'wicked-update.zip');
     const release = {
@@ -191,6 +203,11 @@ function createUpdater(options) {
           err.code = 'feed_not_configured';
           throw err;
         }
+        if (isInsecureUrl(feedUrl)) {
+          const err = new Error('insecure_url');
+          err.code = 'insecure_url';
+          throw err;
+        }
         const response = await fetchFn(feedUrl, { cache: 'no-store', signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
         if (!response.ok) throw new Error('http_' + response.status);
         const release = parseFeed(await response.json());
@@ -224,7 +241,7 @@ function createUpdater(options) {
         return { ...state };
       } catch (err) {
         const code = err.code || err.message || 'network';
-        const localFeedOnly = code === 'feed_not_configured' || (isLocalUrl(feedUrl) && code !== 'bad_signature' && code !== 'bad_url');
+        const localFeedOnly = code === 'feed_not_configured' || (isLocalUrl(feedUrl) && !['bad_signature', 'bad_url', 'insecure_url'].includes(code));
         manifest = null;
         downloaded = null;
         set({
@@ -296,7 +313,7 @@ function createUpdater(options) {
         return { ...state };
       } catch (err) {
         try { fs.rmSync(partial, { force: true }); } catch { /* ignore */ }
-        const bad = ['bad_url', 'bad_checksum', 'bad_size', 'bad_signature'].includes(err.message);
+        const bad = ['bad_url', 'bad_checksum', 'bad_size', 'bad_signature', 'insecure_url'].includes(err.message);
         set({ status: 'error', error: bad ? err.message : 'network', progress: 0 });
         return { ...state };
       }

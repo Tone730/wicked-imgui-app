@@ -79,6 +79,26 @@ async function main() {
     state = await offline.check();
     assert.equal(state.status, 'offline', 'no feed means honest offline status');
 
+    const insecureFeed = createUpdater({
+      feedUrl: 'http://example.com/downloads/latest.json',
+      currentVersion: '1.0.0',
+      dataDir: path.join(tmp, 'insecure-feed'),
+      fetch: fetchMock,
+    });
+    state = await insecureFeed.check();
+    assert.equal(state.status, 'error', 'plaintext remote feed is rejected');
+    assert.equal(state.error, 'insecure_url');
+
+    const insecureAsset = createUpdater({
+      feedUrl,
+      currentVersion: '1.0.0',
+      dataDir: path.join(tmp, 'insecure-asset'),
+      fetch: async (u) => ({ ok: true, json: async () => ({ ...manifest, url: 'http://example.com/pkg.zip' }) }),
+    });
+    state = await insecureAsset.check();
+    assert.equal(state.status, 'error', 'plaintext remote download URL is rejected');
+    assert.equal(state.error, 'insecure_url');
+
     console.log('updater runtime tests passed');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
