@@ -19,7 +19,8 @@ export function checkProject(project){
   const code=String(w['code']??w['props']?.['code']??''),opens=markerCount(code,/@widget\b/g),closes=markerCount(code,/@endwidget\b/g);
   if(opens!==closes)out.push({severity:'warning',message:'Raw widget '+label(w)+' on page "'+(pg['name']||pg['id'])+'" has unbalanced @widget / @endwidget markers ('+opens+' open, '+closes+' close).','pageId':pg['id'],'widgetId':w['id'],fix:'Add the missing @widget or @endwidget marker.'});
  }
- const widgetIds=new Set(ids['keys']());
+ const widgetIds=new Set(ids['keys']()),widgetByKey=new Map();
+ for(const e of entries)widgetByKey['set'](e['page']['id']+'|'+e['w']['id'],e['w']);
  for(const {page:pg,w}of entries){
   const base={'pageId':pg['id'],'widgetId':w['id']},where=' on page "'+(pg['name']||pg['id'])+'"';
   for(const a of w['actions']||[]){
@@ -44,6 +45,18 @@ export function checkProject(project){
    out.push({severity:'warning',message:field+' on widget '+label(w)+' references missing widget "'+ref+'".',...base,fix:'Update the condition to use an existing widget ID.'});
   }
   if(w['parent']&&!widgetIds['has'](w['parent']))out.push({severity:'error',message:'Widget '+label(w)+' has parent "'+w['parent']+'" which does not exist.',...base,fix:'Clear the parent or point it to an existing widget.'});
+  if(w['parent']){
+   const par=widgetByKey['get'](pg['id']+'|'+w['parent']);
+   if(par){
+    const px=Number(par['x']),py=Number(par['y']),pw=Number(par['w']),ph=Number(par['h']);
+    const x=Number(w['x']),y=Number(w['y']),cw=Number(w['w']),ch=Number(w['h']);
+    if([px,py,pw,ph,x,y,cw,ch]['every'](Number['isFinite'])&&pw>0x0&&ph>0x0&&cw>0x0&&ch>0x0){
+     const scrollable=!!par['props']?.['scrollable'];
+     if(x<px||x+cw>px+pw||y<py||(!scrollable&&y+ch>py+ph))
+      out.push({severity:'warning',message:'Widget '+label(w)+' extends outside its parent "'+w['parent']+'" rectangle.',...base,fix:'Move or resize the widget so it fits inside the parent, or make the parent scrollable.'});
+    }
+   }
+  }
   if(!(Number(w['w'])>0x0)||!(Number(w['h'])>0x0))out.push({severity:'error',message:'Widget '+label(w)+' has a zero or negative size ('+String(w['w'])+' x '+String(w['h'])+').',...base,fix:'Set both width and height to positive values.'});
   if(w['type']==='custom'&&!String(w['code']||'')['trim']())out.push({severity:'error',message:'Custom widget '+label(w)+' has no code.',...base,fix:'Write code for the custom widget.'});
   if(ww>0x0&&wh>0x0){

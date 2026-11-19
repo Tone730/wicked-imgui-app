@@ -263,6 +263,26 @@ check('doctor flags an empty non-start page', () => {
   p.startPage = 'p1';
   return doctor.checkProject(p).some((f) => /has no widgets/i.test(f.message) && f.pageId === 'p2');
 });
+check('doctor detects a child escaping its parent panel', () => {
+  const p = model.createProject({ name: 'Escaping' });
+  const panel = { ...model.createWidget('panel', 'panel1', 20, 20, { w: 100, h: 80 }), id: 'panel1' };
+  p.pages = [{ id: 'p1', name: 'One', widgets: [
+    panel,
+    { ...model.createWidget('button', 'child1', 110, 30, { text: 'Child', w: 40, h: 20 }), parent: 'panel1' },
+  ] }];
+  const f = doctor.checkProject(p).find((x) => /extends outside its parent/i.test(x.message));
+  return !!f && f.severity === 'warning';
+});
+check('doctor allows tall children in a scrollable parent', () => {
+  const p = model.createProject({ name: 'Scrollable' });
+  const panel = { ...model.createWidget('panel', 'panel1', 20, 20, { w: 100, h: 80 }), id: 'panel1' };
+  panel.props = { ...(panel.props || {}), scrollable: true };
+  p.pages = [{ id: 'p1', name: 'One', widgets: [
+    panel,
+    { ...model.createWidget('button', 'child1', 30, 150, { text: 'Child', w: 40, h: 20 }), parent: 'panel1' },
+  ] }];
+  return !doctor.checkProject(p).some((x) => /extends outside its parent/i.test(x.message));
+});
 check('every shipped preset has no doctor errors', () => {
   return Object.keys(model.PRESETS).every((id) => {
     const p = model.createProject({ name: id });
