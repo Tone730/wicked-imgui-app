@@ -48,11 +48,18 @@ export function checkProject(project){
   if(w['type']==='custom'&&!String(w['code']||'')['trim']())out.push({severity:'error',message:'Custom widget '+label(w)+' has no code.',...base,fix:'Write code for the custom widget.'});
   if(ww>0x0&&wh>0x0){
    const x=Number(w['x']),y=Number(w['y']),cw=Number(w['w']),ch=Number(w['h']);
-   if(cw>0x0&&ch>0x0&&Number['isFinite'](x)&&Number['isFinite'](y)){
+   if(!Number['isFinite'](x)||!Number['isFinite'](y)||!Number['isFinite'](cw)||!Number['isFinite'](ch))
+    out.push({severity:'warning',message:'Widget '+label(w)+where+' has non-finite geometry (x, y, width or height).',...base,fix:'Enter finite numeric values for position and size.'});
+   else if(cw>0x0&&ch>0x0){
     const ox=Math['max'](0x0,Math['min'](x+cw,ww)-Math['max'](x,0x0)),oy=Math['max'](0x0,Math['min'](y+ch,wh)-Math['max'](y,0x0));
     if(ox*oy<cw*ch*0.25)out.push({severity:'warning',message:'Widget '+label(w)+where+' is positioned mostly outside the window bounds.',...base,fix:'Move the widget inside the window or enlarge the window.'});
+    else if(ox*oy<cw*ch)out.push({severity:'warning',message:'Widget '+label(w)+where+' is partially clipped by the window edge.',...base,fix:'Move the widget fully inside the window or enlarge the window.'});
    }
   }
+  if(Number['isFinite'](Number(w['x']))&&Number(w['x'])<0x0||Number['isFinite'](Number(w['y']))&&Number(w['y'])<0x0)
+   out.push({severity:'warning',message:'Widget '+label(w)+where+' has a negative x or y position.',...base,fix:'Use non-negative coordinates so the widget starts on-screen.'});
+  if(Number(w['w'])>0x0&&Number(w['w'])<0x8||Number(w['h'])>0x0&&Number(w['h'])<0x8)
+   out.push({severity:'warning',message:'Widget '+label(w)+where+' is smaller than 8px in one dimension and may be hard to use.',...base,fix:'Increase the widget width and height.'});
  }
  for(const {page:pg,w}of entries){
   if(w['type']&&!WIDGETS[w['type']]&&w['type']!=='custom'&&w['type']!=='raw')out.push({severity:'warning',message:'Widget '+label(w)+' has unknown type "'+String(w['type'])+'".',pageId:pg['id'],widgetId:w['id'],fix:'Replace it with a supported widget.'});
@@ -88,6 +95,10 @@ export function checkProject(project){
  if(!start)out.push({severity:'error',message:'Project has no start page.',fix:'Add a page and set it as the start page.'});
  else if(!(start['widgets']||[])['some'](w=>w['type']!=='raw'))out.push({severity:'warning',message:'Start page "'+(start['name']||start['id'])+'" has no widgets.','pageId':start['id'],fix:'Add at least one widget to the start page.'});
  if(!project['startPage']||typeof project['startPage']!=='string'||!project['startPage']['trim']())out.push({severity:'warning',message:'Project has no start page set; the first page is used instead.',fix:'Choose a start page in the project settings.'});
+ for(const pg of pages){
+  if(start&&pg['id']===start['id'])continue;
+  if(!(pg['widgets']||[])['some'](w=>w['type']!=='raw'))out.push({severity:'info',message:'Page "'+(pg['name']||pg['id'])+'" has no widgets.',pageId:pg['id'],fix:'Add widgets to the page or remove it.'});
+ }
  if(pages['length']>0x1)for(const pg of pages){
   if(start&&pg['id']===start['id']||incoming['has'](pg['id']))continue;
   out.push({severity:'warning',message:'Page "'+(pg['name']||pg['id'])+'" has no incoming goto action and is not the start page.','pageId':pg['id'],fix:'Add a Go to page action targeting this page, or make it the start page.'});

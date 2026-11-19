@@ -224,6 +224,53 @@ check('doctor accepts every shipped kit project', () => {
   });
 });
 
+// ---- 5b. Project Doctor layout checks --------------------------------------
+check('doctor detects partially clipped widget', () => {
+  const p = model.createProject({ name: 'Clipped' });
+  p.window = { ...(p.window || {}), width: 200, height: 150 };
+  p.pages = [{ id: 'p1', name: 'One', widgets: [
+    model.createWidget('button', 'edge', 180, 10, { text: 'Edge', w: 40, h: 20 }),
+  ] }];
+  return doctor.checkProject(p).some((f) => /partially clipped/i.test(f.message));
+});
+check('doctor detects negative widget position', () => {
+  const p = model.createProject({ name: 'Negative' });
+  p.pages = [{ id: 'p1', name: 'One', widgets: [
+    { ...model.createWidget('button', 'neg', 10, 10, { text: 'Neg' }), x: -12 },
+  ] }];
+  return doctor.checkProject(p).some((f) => /negative x or y/i.test(f.message));
+});
+check('doctor detects tiny widget', () => {
+  const p = model.createProject({ name: 'Tiny' });
+  p.pages = [{ id: 'p1', name: 'One', widgets: [
+    { ...model.createWidget('button', 'tiny', 10, 10, { text: 'Tiny' }), w: 4, h: 4 },
+  ] }];
+  return doctor.checkProject(p).some((f) => /smaller than 8px/i.test(f.message));
+});
+check('doctor detects non-finite widget geometry', () => {
+  const p = model.createProject({ name: 'NaN' });
+  p.pages = [{ id: 'p1', name: 'One', widgets: [
+    { ...model.createWidget('button', 'nan', 10, 10, { text: 'NaN' }), x: NaN },
+  ] }];
+  return doctor.checkProject(p).some((f) => /non-finite geometry/i.test(f.message));
+});
+check('doctor flags an empty non-start page', () => {
+  const p = model.createProject({ name: 'EmptyPage' });
+  p.pages = [
+    { id: 'p1', name: 'One', widgets: [model.createWidget('button', 'b1', 10, 10, { text: 'A' })] },
+    { id: 'p2', name: 'Two', widgets: [] },
+  ];
+  p.startPage = 'p1';
+  return doctor.checkProject(p).some((f) => /has no widgets/i.test(f.message) && f.pageId === 'p2');
+});
+check('every shipped preset has no doctor errors', () => {
+  return Object.keys(model.PRESETS).every((id) => {
+    const p = model.createProject({ name: id });
+    model.applyPreset(p, id);
+    return doctor.checkProject(p).filter((f) => f.severity === 'error').length === 0;
+  });
+});
+
 // ---- 6. Offline account provider -------------------------------------------
 const accountMod = require('C:/Users/Wick/WickedImguiMaker/app/src/main/account.cjs');
 const account = accountMod.createAccount({ dataDir: mkdtempSync(join(tmpdir(), 'wim-reg-')) });
