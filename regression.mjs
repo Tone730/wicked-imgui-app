@@ -134,6 +134,13 @@ for (const language of ['cpp', 'csharp', 'rust']) {
   });
 }
 
+check('C++ export always includes kavro_assets.h', () => {
+  const files = codegen.generateProject(model.createProject({ name: 'NoAssets', language: 'cpp' }), {});
+  const assets = files.find((f) => f.path === 'kavro_assets.h');
+  return !!assets && assets.content.includes('#pragma once') && files.some((f) =>
+    f.path === 'project.cpp' && f.content.includes('#include "kavro_assets.h"'));
+});
+
 for (const language of ['cpp', 'csharp', 'rust']) {
   check('theme + credits export ' + language, () => {
     const project = model.createProject({ name: 'ThemeTest', language });
@@ -375,6 +382,37 @@ for (const [label, prompt, verify] of batchAiCases) {
 const kitIds = ['kali-dark', 'cloudy-light', 'givenchy-gold', 'eon-wtf', 'fortnite-external', 'fn-external', 'loader-template', 'hat-ui', 'lazyui-combat', 'imjson-demo', 'vision-menu', 'dear-imgui-styles', 'imgui-candy', 'untitled-theme-editor', 'clean-menu', 'lumin-menu', 'hello-imgui-themes', 'imthemes-browser', 'cupertino-ui', 'imgui-styles-rs', 'cpstyling-lua', 'imkit-design-system'];
 ok('UI kit registry', uikit.UI_KIT_IDS.length === 22 && kitIds.every((id) => uikit.UI_KIT_IDS.includes(id)));
 check('every UI kit carries attribution metadata', () => uikit.listKits().every((k) => k.license && k.repo && k.author && k.attribution));
+
+//---- Third-party licence notices -------------------------------------------
+const kitLicenses = await import(base + 'kitLicenses.js');
+const notices = readFileSync(new URL('./THIRD-PARTY-NOTICES.txt', import.meta.url), 'utf8');
+const mitKits = uikit.listKits().filter((k) => /^MIT/i.test(k.license || ''));
+const sampleKits = uikit.listKits().filter((k) => !/^MIT/i.test(k.license || ''));
+check('THIRD-PARTY-NOTICES covers every bundled kit', () => uikit.listKits()
+  .every((k) => notices.includes(k.name) && notices.includes(k.id)));
+check('every MIT kit ships its verbatim licence', () => mitKits.length > 0 && mitKits.every((k) => {
+  const text = kitLicenses.kitLicenseText(k.id);
+  return text && /MIT License/i.test(text) && /Permission is hereby granted/i.test(text)
+    && text.split('\n').some((ln) => /Copyright \(c\)/i.test(ln));
+}));
+check('unlicensed source samples are explicitly labelled', () => {
+  const labels = (notices.match(/No licence file was present/g) || []).length;
+  return sampleKits.length > 0 && labels === sampleKits.length;
+});
+check('generated licence module matches licenses/ files', () => {
+  const dir = new URL('./licenses/', import.meta.url);
+  const { readdirSync } = require('fs');
+  const files = readdirSync(dir).filter((f) => f.endsWith('.txt'));
+  return files.length === Object.keys(kitLicenses.KIT_LICENSE_TEXTS).length && files.every((f) => {
+    const id = f.replace(/\.txt$/, '');
+    return kitLicenses.kitLicenseText(id) === readFileSync(new URL('./licenses/' + f, import.meta.url), 'utf8')
+      .replace(/\r\n/g, '\n').trimEnd() + '\n';
+  });
+});
+check('ZIP packaging includes third-party notices', () => {
+  const pkg = readFileSync('C:/Users/Wick/wicked-imgui/tools/package-app.ps1', 'utf8');
+  return pkg.includes('THIRD-PARTY-NOTICES.txt') && pkg.includes("'licenses'");
+});
 check('UI kit recipes target real widgets/actions', () => Object.values(uikit.CONTROL_RECIPES)
   .every((r) => (r.widget && model.WIDGETS[r.widget]) || (r.action && model.ACTIONS[r.action])));
 check('UI kit presets all exist', () => kitIds.every((id) => {

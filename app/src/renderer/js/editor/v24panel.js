@@ -9,6 +9,7 @@ import { modal, toast, promptDialog } from '../ui.js';
 import { t } from '../i18n.js';
 import { applyProfile, LOADER_TYPES, GRAPHICS_APIS, COMPAT_FLAGS } from '../../../shared/loaders.js';
 import { listKits, getKit, buildKitProject, kitSuggestions, CONTROL_RECIPES, kitCreditsText } from '../../../shared/uikit.js';
+import { kitLicenseText } from '../../../shared/kitLicenses.js';
 
 const KINDS = [
   ['cpp', 'C++'], ['csharp', 'C#'], ['rust', 'Rust'], ['web', 'Web / JS'],
@@ -340,9 +341,13 @@ export function renderV24(V, X) {
           meta.appendChild(h('span', kit.repo));
         }
       }
+      const licence = kitLicenseText(kit.id);
       kids.push(h('div.v24-credit', { style: { borderTop: '1px solid #ffffff18', padding: '8px 0' } },
         h('strong', kit.name), meta,
-        kit.attribution ? h('p.muted.small', kit.attribution) : null));
+        kit.attribution ? h('p.muted.small', kit.attribution) : null,
+        licence ? h('details.small', { style: { marginTop: '4px' } },
+          h('summary', 'Full licence text'),
+          h('pre.muted', { style: { whiteSpace: 'pre-wrap', fontSize: '11px' } }, licence)) : null));
     }
     // Keep a plain-text form available for the generated credits.h and copy/paste.
     kids.push(h('details.small', { style: { marginTop: '8px' } },
