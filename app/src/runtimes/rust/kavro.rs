@@ -331,6 +331,18 @@ impl Kavro {
         draw(self, ui, &mut area);
         false
     }
+
+    // Overlay-menu helpers used by generated src/menu.rs. No-ops in this
+    // offline stub; a full build implements a toggleable in-game overlay menu.
+    pub fn pressed(&self, _key: &str) -> bool { false }
+    pub fn begin_menu_window(&mut self, _ui: &Ui, _title: &str) { }
+    pub fn end_menu_window(&mut self, _ui: &Ui) { }
+    pub fn menu_tab(&mut self, _ui: &Ui, _name: &str) -> bool { false }
+    pub fn menu_toggle(&mut self, _ui: &Ui, _id: &str, _label: &str) -> bool { false }
+    pub fn menu_slider(&mut self, _ui: &Ui, _id: &str, _label: &str, _min: f32, _max: f32) -> bool { false }
+    pub fn menu_combo(&mut self, _ui: &Ui, _id: &str, _label: &str) -> bool { false }
+    pub fn menu_button(&mut self, _ui: &Ui, _id: &str, _label: &str) -> bool { false }
+    pub fn menu_label(&mut self, _ui: &Ui, _label: &str) { }
 }
 
 /// Entry point used by main.rs. A full build calls

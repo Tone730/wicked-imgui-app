@@ -175,6 +175,18 @@ bool TextArea(const char* id, const char* text, Vec2 pos, Vec2 size);
 bool Number(const char* id, const char* text, Vec2 pos, Vec2 size);
 bool Custom(const char* id, const char* text, Vec2 pos, Vec2 size, void (*draw)(Area& a));
 
+// Overlay-menu helpers used by generated menu.cpp. In this offline stub these
+// are no-ops; a full runtime implements a toggleable in-game overlay menu.
+bool Pressed(const char* key);
+void BeginMenuWindow(const char* title);
+void EndMenuWindow();
+bool MenuTab(const char* name);
+bool MenuToggle(const char* id, const char* label);
+bool MenuSlider(const char* id, const char* label, float min, float max);
+bool MenuCombo(const char* id, const char* label);
+bool MenuButton(const char* id, const char* label);
+void MenuLabel(const char* label);
+
 // Optional platform hooks: host programs fill these in when a real backend
 // is available. They are no-ops in the offline compatibility build.
 struct Platform {
@@ -265,6 +277,17 @@ inline bool Custom(const char* id, const char* text, Vec2 pos, Vec2 size, void (
     if (draw) draw(a);
     return false;
 }
+
+// Offline overlay-menu stub bodies. A real build replaces these with ImGui calls.
+inline bool Pressed(const char*) { return false; }
+inline void BeginMenuWindow(const char*) {}
+inline void EndMenuWindow() {}
+inline bool MenuTab(const char*) { return false; }
+inline bool MenuToggle(const char*, const char*) { return false; }
+inline bool MenuSlider(const char*, const char*, float, float) { return false; }
+inline bool MenuCombo(const char*, const char*) { return false; }
+inline bool MenuButton(const char*, const char*) { return false; }
+inline void MenuLabel(const char*) {}
 
 } // namespace kv
 

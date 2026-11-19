@@ -193,6 +193,18 @@ public static partial class Kv
         draw?.Invoke(new Area(id, text, pos, size));
         return false;
     }
+
+    // Overlay-menu helpers used by generated Menu.cs. No-ops in this offline
+    // stub; a full build implements a toggleable in-game overlay menu.
+    public static bool Pressed(string key) => false;
+    public static void BeginMenuWindow(string title) { }
+    public static void EndMenuWindow() { }
+    public static bool MenuTab(string name) => false;
+    public static bool MenuToggle(string id, string label) => false;
+    public static bool MenuSlider(string id, string label, float min, float max) => false;
+    public static bool MenuCombo(string id, string label) => false;
+    public static bool MenuButton(string id, string label) => false;
+    public static void MenuLabel(string label) { }
 }
 
 // Entry point used by Program.cs. Generated Project.cs supplies Configure().

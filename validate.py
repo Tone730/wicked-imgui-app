@@ -443,6 +443,49 @@ else:
             elif record.group(1).decode("ascii") != header_digest:
                 errors.append("embedded ASAR integrity hash does not match app.asar header")
 
+# ---- Expansion: menus, target detection, extended animation -----------------
+for rel in [
+    "src/main/game.cjs",
+    "src/shared/menus.js",
+    "src/shared/targetConfig.js",
+]:
+    if not (APP / rel).exists():
+        errors.append(f"expansion module missing: {rel}")
+
+for ident in ["pop", "bounce", "zoom", "pulse", "vortex", "sparks", "scanlines",
+              "glitch", "tunnel", "dna"]:
+    if f"'{ident}'" not in model and f'"{ident}"' not in model:
+        errors.append(f"model.js missing new animation/effect: {ident}")
+
+preview_runtime = (APP / "src" / "renderer" / "js" / "preview" / "runtime.js").read_text(encoding="utf-8")
+for case in ["case 0x16", "case 0x17", "case 0x18", "case 0x19", "case 0x1a", "case 0x1b"]:
+    if case not in preview_runtime:
+        errors.append(f"preview runtime missing effect: {case}")
+
+main_src = (APP / "main.cjs").read_text(encoding="utf-8")
+preload_src = (APP / "preload.cjs").read_text(encoding="utf-8")
+api_src = (APP / "src" / "renderer" / "js" / "api.js").read_text(encoding="utf-8")
+for needle in ['"target:"+"analyze"', '"menu:"+"exportLibrary"', '"menu:"+"importLibrary"',
+               "analyzeGameTarget"]:
+    if needle not in main_src:
+        errors.append(f"main.cjs missing expansion IPC wiring: {needle}")
+for needle in ['"target"+":analyze"', '"menu"+":exportLibrary"', '"menu"+":importLibrary"']:
+    if needle not in preload_src:
+        errors.append(f"preload.cjs missing expansion bridge: {needle}")
+if "'target':{'analyze'" not in api_src or "'menu':{'exportLibrary'" not in api_src:
+    errors.append("browser API fallback missing target/menu namespaces")
+
+left_src = (APP / "src" / "renderer" / "js" / "editor" / "left.js").read_text(encoding="utf-8")
+inspector_src = (APP / "src" / "renderer" / "js" / "editor" / "inspector.js").read_text(encoding="utf-8")
+if "'menus'" not in left_src or "applyMenuToProject" not in left_src:
+    errors.append("left panel missing menu workspace")
+if "'target'" not in inspector_src or "configFromAnalysis" not in inspector_src:
+    errors.append("inspector missing target workspace")
+for name in ["cpp.js", "csharp.js", "rust.js"]:
+    src = (APP / "src" / "shared" / "codegen" / name).read_text(encoding="utf-8")
+    if "menuFile" not in src or "targetConfigFile" not in src:
+        errors.append(f"codegen/{name} missing menu/target file generation")
+
 print(f"checked {len(js_files)} JavaScript files")
 for warning in warnings:
     print(f"WARN {warning}")

@@ -4,7 +4,7 @@
 // template/preset from the shipped modules, so newly added ids are covered
 // automatically without editing this file.
 import { createRequire } from 'module';
-import { mkdtempSync } from 'fs';
+import { mkdtempSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -21,6 +21,9 @@ const htmlMockup = await import(base + 'htmlMockup.js');
 const themeBundle = await import(base + 'themeBundle.js');
 const projectBundle = await import(base + 'projectBundle.js');
 const sourceDiff = await import(base + 'sourceDiff.js');
+const menus = await import(base + 'menus.js');
+const targetConfig = await import(base + 'targetConfig.js');
+const game = require('C:/Users/Wick/WickedImguiMaker/app/src/main/game.cjs');
 
 let passed = 0;
 const failures = [];
@@ -369,6 +372,119 @@ check('source diff preview', () => {
   return changes[0].action === 'new' && changes[1].action === 'changed' && changes[2].action === 'unchanged'
     && summary.new === 1 && summary.changed === 1 && summary.unchanged === 1 && summary.needsReview === true
     && sourceDiff.formatDiffRow({ k: '+', t: 'added line' }) === '+ added line';
+});
+
+// ---- 13. Reusable menu system ----------------------------------------------
+for (const type of Object.keys(menus.MENU_TYPES)) {
+  check('menu preset ' + type, () => {
+    const menu = menus.createMenu({ type });
+    const project = model.createProject({ name: 'MenuTest', type: 'loader' });
+    const applied = menus.applyMenuToProject(project, menu);
+    return !!applied.menu && applied.pages.length === menu.categories.length
+      && applied.pages.every(page => page.widgets.length > 0)
+      && menus.menuFromProject(applied).id === menu.id;
+  });
+}
+check('menu normalize and serialize round trip', () => {
+  const menu = menus.createMenu({ type: 'dashboard', name: 'My HUD' });
+  const parsed = menus.parseMenu(menus.serializeMenu(menu));
+  return parsed.name === 'My HUD' && parsed.type === 'dashboard'
+    && menus.normalizeMenu({ categories: [{ id: 'x', items: [{ type: 'unknown' }] }] }).categories[0].items[0].type === 'toggle';
+});
+check('menu source markers and codegen files', () => {
+  const menu = menus.createMenu({ type: 'trainer' });
+  for (const lang of ['cpp', 'csharp', 'rust']) {
+    const src = menus.menuSource(menu, lang);
+    if (!src.includes('// @menu') || !src.includes('// @endmenu')) return false;
+    const project = model.createProject({ name: 'M', type: 'loader', language: lang });
+    menus.applyMenuToProject(project, menu);
+    const file = codegen.generateProject(project, {}).find(f => /menu\.(cpp|cs|rs)$/i.test(f.path));
+    if (!file || !file.content.includes('@menu')) return false;
+  }
+  return true;
+});
+
+// ---- 14. Generic target detection + loader config --------------------------
+check('target config defaults', () => {
+  const t = targetConfig.normalizeTarget(null);
+  return t.renderer === 'dx11' && t.arch === 'x64' && t.attachMode === 'inject' && t.version === 1;
+});
+check('target config from offline analysis', () => {
+  const cfg = targetConfig.configFromAnalysis({
+    processName: 'game.exe', file: 'C:/Games/game.exe', arch: 'x64', renderer: 'dx12',
+    engine: 'unity-il2cpp', input: { xinput: true, directinput: false },
+  }, { windowClass: 'UnityWndClass' });
+  return cfg.processName === 'game.exe' && cfg.renderer === 'dx12' && cfg.windowClass === 'UnityWndClass'
+    && cfg.input.xinput === true && targetConfig.targetSummary(cfg).includes('DX12');
+});
+check('target config file only for loader projects', () => {
+  const window = model.createProject({ name: 'W', type: 'window' });
+  const loader = model.createProject({ name: 'L', type: 'loader' });
+  loader.target = targetConfig.configFromAnalysis({ processName: 'game.exe', renderer: 'vulkan' });
+  const file = targetConfig.targetConfigFile(loader);
+  return targetConfig.targetConfigFile(window) === null && !!file && file.path === 'loader.config.json'
+    && JSON.parse(file.content).renderer === 'vulkan';
+});
+check('offline renderer/engine detection', () => {
+  const d = game.detect(['UnityPlayer.dll', 'd3d12.dll', 'GameAssembly.dll', 'xinput1_3.dll']);
+  const d2 = game.detect(['d3d9.dll', 'tier0.dll', 'vstdlib.dll']);
+  return d.renderer === 'dx12' && d.engine === 'unity-il2cpp' && d.input.xinput === true
+    && d2.renderer === 'dx9' && d2.engine === 'source';
+});
+check('PE import parser reads real binaries', () => {
+  try {
+    const a = game.analyzeTarget('C:\\Windows\\System32\\kernel32.dll');
+    return a.arch === 'x64' && a.importCount > 0 && Array.isArray(a.imports);
+  } catch (error) {
+    return false;
+  }
+});
+check('loader export includes menu and config files', () => {
+  const project = model.createProject({ name: 'Loader', type: 'loader' });
+  menus.applyMenuToProject(project, menus.createMenu({ type: 'combat' }));
+  project.target = targetConfig.configFromAnalysis({ processName: 'game.exe', renderer: 'dx11' });
+  for (const lang of ['cpp', 'csharp', 'rust']) {
+    project.language = lang;
+    const paths = codegen.generateProject(project, {}).map(f => f.path);
+    if (!paths.some(p => /menu\.(cpp|cs|rs)$/i.test(p)) || !paths.includes('loader.config.json')) return false;
+  }
+  return true;
+});
+
+// ---- 15. Extended animations and effects -----------------------------------
+check('new animation ids are indexable', () => {
+  return ['pop', 'bounce', 'zoom', 'pulse'].every(id => model.ANIMS.indexOf(id) >= 6);
+});
+check('new effect ids are indexable', () => {
+  return ['vortex', 'sparks', 'scanlines', 'glitch', 'tunnel', 'dna'].every(id => model.EFFECTS.indexOf(id) >= 22);
+});
+check('preview implements new effects and animations', () => {
+  const src = readFileSync('C:/Users/Wick/WickedImguiMaker/app/src/renderer/js/preview/runtime.js', 'utf8');
+  return [0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b].every(i => src.includes('case 0x' + i.toString(16)))
+    && [0x6, 0x7, 0x8, 0x9].every(i => src.includes("y['anim']===0x" + i.toString(16)));
+});
+check('runtime config maps new effect indices', () => {
+  const project = model.createProject();
+  project.background.effect = 'vortex';
+  return model.runtimeConfig(project).background.effect === model.EFFECTS.indexOf('vortex');
+});
+
+// ---- 16. Persistence round trips with new data -----------------------------
+check('bundle preserves menus and target config', () => {
+  const project = model.createProject({ name: 'Bundle2', type: 'loader' });
+  project.menu = menus.createMenu({ type: 'sidebar' });
+  project.target = targetConfig.configFromAnalysis({ processName: 'game.exe', renderer: 'dx12' });
+  const json = projectBundle.serializeProjectBundle(project, []);
+  const parsed = projectBundle.parseProjectBundle(json);
+  return parsed.project.menu.type === 'sidebar' && parsed.project.target.renderer === 'dx12'
+    && model.migrateProject(parsed.project).menu.id === project.menu.id;
+});
+check('migrateProject keeps menu and target', () => {
+  const project = model.createProject({ name: 'M', type: 'loader' });
+  project.menu = menus.createMenu();
+  project.target = targetConfig.normalizeTarget({ renderer: 'vulkan' });
+  const migrated = model.migrateProject(JSON.parse(JSON.stringify(project)));
+  return !!migrated.menu && migrated.target.renderer === 'vulkan';
 });
 
 // ---- Summary ---------------------------------------------------------------
