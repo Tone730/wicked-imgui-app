@@ -1,10 +1,10 @@
 // premade.js — editable templates derived from the attached archives.
 // Every template is a normal Wicked project: open it, edit any control, change
 // any colour, export it. Sources were analysed statically only; nothing from
-// the archives was executed. The Eon entry is an *approximation* built from the
-// structurally-identical sibling projects because its archive is password
-// protected (see `approximate` / `note`).
+// the archives was executed. Exact Eon/Fortnite-External/Hackermarket/Loader/
+// HAT/LazyUI entries are built from uikit.js (source-derived design systems).
 import { createProject, createPage, createWidget, applyPreset } from './model.js';
+import { buildKitProject } from './uikit.js';
 
 const W = (type, id, text, x, y, props = {}, extra = {}) => {
   const w = createWidget(type, id, x, y);
@@ -546,12 +546,10 @@ export const PREMADE_TEMPLATES = [
     approximate: false, build: nexus,
   },
   {
-    id: 'eon-style', name: 'Eon-style Remake', author: 'Wicked (approximation)',
-    description: 'Violet-accent external menu inspired by the sibling Fortnite UI Syntax projects. Exact Eon assets were unavailable (archive password protected).',
-    tags: ['dark', 'violet', 'external', 'approximate'], size: [700, 500],
-    approximate: true,
-    note: 'The supplied Eon archive is encrypted. This is an approximation from structurally-identical sibling projects; supply the password for exact fidelity.',
-    build: eonStyle,
+    id: 'eon-style', name: 'Eon.WTF Menu (exact)', author: 'Eon (UI remake, static source)',
+    description: 'EXACT white-on-charcoal Eon remake from the unlocked archive: 728×568, 4 tabs / 11 pages, Inter + Font Awesome, monochrome toggles, measured card grid, status/expiry footer.',
+    tags: ['dark', 'monochrome', 'external', 'inter', 'exact'], size: [728, 568],
+    approximate: false, build: () => buildKitProject('eon-wtf'),
   },
   {
     id: 'kali-loader', name: 'Kali.dev Loader', author: 'Kali.dev (UI remake)',
@@ -570,6 +568,36 @@ export const PREMADE_TEMPLATES = [
     description: 'Gold-on-charcoal 720×445 menu: Combat / Visuals / Exploits / Misc top tabs with sub-tabs, two-column controls, checkboxes, sliders, combos, hotkeys, color pickers and configs. Editable.',
     tags: ['dark', 'gold', 'tabs', 'two-column', 'overlay'], size: [720, 445],
     approximate: false, build: givenchy,
+  },
+  {
+    id: 'fortnite-external', name: 'Fortnite External (purple)', author: 'Random Remake (UI remake, static source)',
+    description: 'Purple-gradient flat-card menu from the unlocked source: 718×578, 3 tabs / 6 pages, Poppins + Font Awesome, thin white-knob sliders, search box and Unload-cheat button (demo only).',
+    tags: ['dark', 'purple', 'external', 'poppins', 'exact'], size: [718, 578],
+    approximate: false, build: () => buildKitProject('fortnite-external'),
+  },
+  {
+    id: 'fn-external', name: 'FN External (Hackermarket)', author: 'Syntax (UI remake, static source)',
+    description: 'Exact measured Hackermarket remake: 700×500, 3 tabs / 12 screens, red accent, Outfit + Material Icons, 150+ named weapon/visual/settings controls.',
+    tags: ['dark', 'red', 'external', 'outfit', 'exact'], size: [700, 500],
+    approximate: false, build: () => buildKitProject('fn-external'),
+  },
+  {
+    id: 'loader-template', name: 'Orange Loader Template', author: 'project name (static source)',
+    description: 'Orange-on-black loader skeleton: 620×470, PROJECT/NAME header, 8 sidebar tabs, 16 GROUP panels, multi-combo and keybind scaffold. Great starter template.',
+    tags: ['dark', 'orange', 'loader', 'starter', 'exact'], size: [620, 470],
+    approximate: false, build: () => buildKitProject('loader-template'),
+  },
+  {
+    id: 'hat-ui', name: 'HAT UI Kit', author: 'HAT (UI template, static source)',
+    description: 'Periwinkle categorised UI kit: 784×768, 5 tabs, collapsible CATEGORY > MODULE groups, animated widgets, ESP Preview window and INSERT toggle.',
+    tags: ['dark', 'blue', 'categories', 'animated', 'exact'], size: [784, 768],
+    approximate: false, build: () => buildKitProject('hat-ui'),
+  },
+  {
+    id: 'lazyui-combat', name: 'LazyUI Combat Dashboard', author: 'Lazy UIs / merkurydev (static source)',
+    description: 'Green Figma-generated 1440×960 dashboard: MN3Y brand, sidebar categories, 4 sub-tabs, 3-column cards, segmented controls, switches and status readouts.',
+    tags: ['dark', 'green', 'dashboard', 'figma', 'exact'], size: [1440, 960],
+    approximate: false, build: () => buildKitProject('lazyui-combat'),
   },
 ];
 

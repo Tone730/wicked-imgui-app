@@ -1,7 +1,7 @@
 {
   "name": "wicked-imgui-maker",
   "productName": "Wicked ImGui Maker",
-  "version": "2.5.0",
+  "version": "2.7.0",
   "description": "Wicked ImGui Maker — a powerful ImGui window, loader, and interface builder with expanded widgets, theming, code generation, and workflow tools.",
   "main": "main.cjs",
   "type": "module",

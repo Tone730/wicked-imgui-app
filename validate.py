@@ -337,6 +337,28 @@ ai_ui = (APP / "src" / "renderer" / "js" / "editor" / "ai.js").read_text(
 if 'S["id"]==="local"' not in ai_ui or "ai.localBuiltIn" not in ai_ui:
     errors.append("AI settings UI does not handle the local offline provider")
 
+uikit_src = (APP / "src" / "shared" / "uikit.js").read_text(encoding="utf-8")
+for needle in [
+    "UI_KITS", "CONTROL_RECIPES", "kali-dark", "cloudy-light", "givenchy-gold",
+    "buildKitProject", "kitPatchFromRequest", "kitAnswerFromRequest", "kitKnowledgeText",
+]:
+    if needle not in uikit_src:
+        errors.append(f"uikit.js missing source-derived catalog: {needle}")
+ai_shared_src = (APP / "src" / "shared" / "ai.js").read_text(encoding="utf-8")
+if "kitKnowledgeText" not in ai_shared_src or "SOURCE-DERIVED UI KITS" not in ai_shared_src:
+    errors.append("shared AI prompts do not include the UI kit catalog")
+for needle in ["__wickedUiKitPromise", "kitPatchFromRequest", "kitAnswerFromRequest"]:
+    if needle not in ai_js:
+        errors.append(f"ai.cjs missing offline UI kit hook: {needle}")
+v24_src = (APP / "src" / "renderer" / "js" / "editor" / "v24panel.js").read_text(
+    encoding="utf-8"
+)
+if "UI design systems" not in v24_src or "buildKitProject" not in v24_src:
+    errors.append("v24panel.js missing the UI design systems section")
+regression_src = (ROOT / "regression.mjs").read_text(encoding="utf-8")
+if "8c. Source-derived UI kit catalog" not in regression_src:
+    errors.append("regression.mjs missing UI kit coverage")
+
 newproject = (APP / "src" / "renderer" / "js" / "screens" / "newproject.js").read_text(
     encoding="utf-8"
 )

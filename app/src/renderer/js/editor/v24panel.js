@@ -8,6 +8,7 @@ import { api } from '../api.js';
 import { modal, toast, promptDialog } from '../ui.js';
 import { t } from '../i18n.js';
 import { applyProfile, LOADER_TYPES, GRAPHICS_APIS, COMPAT_FLAGS } from '../../../shared/loaders.js';
+import { listKits, getKit, buildKitProject, kitSuggestions, CONTROL_RECIPES } from '../../../shared/uikit.js';
 
 const KINDS = [
   ['cpp', 'C++'], ['csharp', 'C#'], ['rust', 'Rust'], ['web', 'Web / JS'],
@@ -288,10 +289,46 @@ export function renderV24(V, X) {
     return section('Image assets', kids);
   }
 
+  /* --------------------------- UI design systems ------------------------ */
+  function uiKitSection() {
+    const kids = [sub('Design systems and control recipes transcribed from the sampled menus. Static analysis only — no archive code is run.')];
+    const kits = listKits();
+    if (!kits.length) kids.push(sub('No UI kits are bundled in this build.'));
+    for (const kit of kits) {
+      const full = getKit(kit.id);
+      const controls = full.screens.reduce((n, s) => n + s.controls.length, 0);
+      const swatches = h('div.row', { style: { gap: '4px', flexWrap: 'wrap', margin: '4px 0' } });
+      for (const color of Object.values(full.palette).slice(0, 10)) {
+        swatches.appendChild(h('span', {
+          title: color,
+          style: { width: '14px', height: '14px', borderRadius: '3px', background: color, border: '1px solid #8888' },
+        }));
+      }
+      kids.push(h('div.v24-kit', { style: { borderTop: '1px solid #ffffff18', padding: '8px 0' } },
+        h('strong', kit.name),
+        h('p.muted.small', kit.summary),
+        h('p.small', `${full.window.width}x${full.window.height} · ${kit.screens} screen(s) · ${controls} control(s) · preset: ${kit.preset}`),
+        swatches,
+        btn('Open as editable project', 'layout', () => {
+          try { apply(buildKitProject(kit.id), 'UI kit: ' + kit.name); }
+          catch (e) { err(e, 'Could not open the UI kit'); }
+        }, 'btn sm primary')));
+    }
+    const recipes = h('div.small', { style: { marginTop: '6px' } },
+      h('strong', 'Control recipes'),
+      h('div.muted', Object.entries(CONTROL_RECIPES).map(([name, r]) => `${name} → ${r.widget || r.action}`).join(' · ')));
+    kids.push(recipes);
+    const prompts = h('div.small', { style: { marginTop: '6px' } }, h('strong', 'AI prompts'));
+    for (const text of kitSuggestions().slice(0, 3)) prompts.appendChild(h('div.muted', '“' + text + '”'));
+    kids.push(prompts);
+    return section('UI design systems', kids);
+  }
+
   /* ------------------------------ Build --------------------------------- */
   function build() {
     clear(V);
     V.appendChild(visionSection());
+    V.appendChild(uiKitSection());
     V.appendChild(premadeSection());
     V.appendChild(librarySection());
     V.appendChild(loaderSection());

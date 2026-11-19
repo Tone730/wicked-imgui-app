@@ -30,6 +30,7 @@ const loaders = await import(base + 'loaders.js');
 const learn = await import(base + 'learn.js');
 const library = await import(base + 'library.js');
 const premade = await import(base + 'premade.js');
+const uikit = await import(base + 'uikit.js');
 
 let passed = 0;
 const failures = [];
@@ -299,6 +300,81 @@ for (const [label, prompt, verify] of advancedAiCases) {
     return verify(aiShared.applyAiResult(proj, patch).project);
   });
 }
+
+// ---- 8c. Source-derived UI kit catalog + offline AI ------------------------
+const kitIds = ['kali-dark', 'cloudy-light', 'givenchy-gold', 'eon-wtf', 'fortnite-external', 'fn-external', 'loader-template', 'hat-ui', 'lazyui-combat'];
+ok('UI kit registry', uikit.UI_KIT_IDS.length === 9 && kitIds.every((id) => uikit.UI_KIT_IDS.includes(id)));
+check('UI kit recipes target real widgets/actions', () => Object.values(uikit.CONTROL_RECIPES)
+  .every((r) => (r.widget && model.WIDGETS[r.widget]) || (r.action && model.ACTIONS[r.action])));
+check('UI kit presets all exist', () => kitIds.every((id) => {
+  const kit = uikit.getKit(id);
+  return kit && model.PRESETS[kit.preset] && kit.screens.length && kit.window.width > 0;
+}));
+for (const id of kitIds) {
+  const built = uikit.buildKitProject(id);
+  check('UI kit builds editable project: ' + id, () => {
+    if (!built || !built.pages.length) return false;
+    const widgets = built.pages.flatMap((pg) => pg.widgets);
+    return widgets.length >= 10 && widgets.every((w) => model.WIDGETS[w.type] && /^[A-Za-z_][A-Za-z0-9_]*$/.test(w.id));
+  });
+  const ctx = JSON.stringify(aiShared.compactProject(model.createProject({ name: 'Kit test' }))) +
+    '\n\nRequest: recreate the ' + uikit.getKit(id).name;
+  const res = await ai.run({ provider: 'local', json: true, messages: [{ role: 'user', content: ctx }] });
+  check('local AI recreates UI kit: ' + id, () => {
+    const patch = aiShared.parseAiJson(res.text);
+    const out = aiShared.applyAiResult(model.createProject({ name: 'Kit target' }), patch);
+    return out.stats.pagesAdded >= 1 && out.stats.added >= 10 && patch.summary.includes(uikit.getKit(id).name);
+  });
+}
+check('UI kit knowledge in AI prompts', () => {
+  const prompt = aiShared.editSystemPrompt(model.createProject({ name: 'Prompt test' }));
+  return prompt.includes('SOURCE-DERIVED UI KITS') && prompt.includes('#FFD700') && prompt.includes('CONTROL RECIPES');
+});
+{
+  const ask = await ai.run({ provider: 'local', system: '', messages: [{ role: 'user', content: 'Tell me about the Givenchy Standalone Menu' }] });
+  check('local AI explains UI kits', () => ask.text.includes('Givenchy Standalone Menu') && ask.text.includes('#FFD700'));
+}
+
+// ---- 8d. Reusable control lexicon + premade registry -----------------------
+check('lexicon expands array labels into single controls', () => {
+  const lex = uikit.controlLexicon();
+  const joints = lex.filter((e) => e.label === 'Skeletons JointsTTTT');
+  return joints.length >= 1 && joints[0].kit === 'hat-ui' && joints[0].widget === 'checkbox'
+    && !lex.some((e) => e.label === 'SkeletonsTTTTT,Skeletons JointsTTTT');
+});
+check('findKitControl prefers the exact sampled name', () => {
+  const ref = uikit.findKitControl('Aimbot Smoothing');
+  return !!ref && ref.label === 'Aimbot Smoothing' && ref.widget === 'slider' && ref.kit === 'fn-external';
+});
+check('lexicon patch inserts a quoted sampled control', () => {
+  const proj = model.createProject({ name: 'Lexicon' });
+  proj.pages = [{ id: 'main', name: 'Main', widgets: [] }];
+  proj.startPage = 'main';
+  const ctx = JSON.stringify(aiShared.compactProject(proj)) + '\n\nRequest: add a "Maximum range" control';
+  const patch = uikit.lexiconPatchFromRequest(ctx);
+  if (!patch) return 'no patch';
+  const out = aiShared.applyAiResult(proj, aiShared.parseAiJson(patch));
+  const w = out.project.pages[0].widgets[0];
+  return !!w && w.type === 'slider' && w.text === 'Maximum range';
+});
+check('lexicon patch ignores generic widget requests', () => {
+  const proj = model.createProject({ name: 'Generic' });
+  proj.pages = [{ id: 'main', name: 'Main', widgets: [] }];
+  proj.startPage = 'main';
+  const ctx = JSON.stringify(aiShared.compactProject(proj)) + '\n\nRequest: add an icon button';
+  return uikit.lexiconPatchFromRequest(ctx) === null;
+});
+check('new design systems detected in AI requests', () => {
+  const ids = uikit.detectKitRequests('Recreate HAT UI and the LazyUI Combat Dashboard');
+  return ids.includes('hat-ui') && ids.includes('lazyui-combat');
+});
+check('premade registry builds every template', () => {
+  if (premade.PREMADE_TEMPLATES.length !== 12) return 'expected 12 templates';
+  return premade.PREMADE_TEMPLATES.every((t) => {
+    try { const p = premade.buildPremade(t.id); return p && p.pages && p.pages.length > 0; }
+    catch { return false; }
+  });
+});
 
 // ---- 9. Editor power tools -------------------------------------------------
 ok('zoom presets', editorTools.ZOOM_PRESETS.length >= 6 && editorTools.ZOOM_PRESETS.includes(1));
