@@ -11,7 +11,7 @@
 import { deflateSync } from 'zlib';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SNAP = join(ROOT, 'snapshots');
@@ -121,37 +121,51 @@ function renderBoard(kit, screen) {
 }
 
 // ---- run --------------------------------------------------------------------
-if (UPDATE) mkdirSync(SNAP, { recursive: true });
-const kits = uikit.listKits().map((k) => uikit.getKit(k.id));
-let snaps = 0, failures = [];
-const expected = [];
-for (const kit of kits) {
-  for (const screen of kit.screens) {
-    const name = kit.id + '__' + screen.id + '.png';
-    expected.push(name);
-    const file = join(SNAP, name);
-    const png = renderBoard(kit, screen);
-    if (UPDATE || !existsSync(file)) {
-      writeFileSync(file, png);
+// Exported so regression.mjs can fold the kit-board baselines into the main QA
+// gate. A palette or label change must fail `node regression.mjs` on its own.
+export function checkVisualRegression({ update = false, log = true } = {}) {
+  if (update) mkdirSync(SNAP, { recursive: true });
+  const kits = uikit.listKits().map((k) => uikit.getKit(k.id));
+  let snaps = 0;
+  const failures = [];
+  const expected = [];
+  for (const kit of kits) {
+    for (const screen of kit.screens) {
+      const name = kit.id + '__' + screen.id + '.png';
+      expected.push(name);
+      const file = join(SNAP, name);
+      const png = renderBoard(kit, screen);
+      if (update || !existsSync(file)) {
+        writeFileSync(file, png);
+        snaps++;
+        continue;
+      }
+      const baseline = readFileSync(file);
+      if (!baseline.equals(png)) failures.push(name);
       snaps++;
-      continue;
     }
-    const baseline = readFileSync(file);
-    if (!baseline.equals(png)) failures.push(name);
-    snaps++;
   }
+  if (!update) {
+    // remove stale baselines for boards that no longer exist
+    for (const f of readdirSync(SNAP)) if (f.endsWith('.png') && !expected.includes(f)) failures.push('stale:' + f);
+  }
+  if (log) {
+    console.log(`visual-regression: ${snaps} kit boards, ${failures.length} mismatch(es)`);
+    if (failures.length) {
+      for (const f of failures.slice(0, 30)) console.log('  FAIL ' + f);
+      if (failures.length > 30) console.log('  ... and ' + (failures.length - 30) + ' more');
+      console.log('visual-regression: MISMATCH — run with --update if the change is intentional');
+    } else {
+      if (update) console.log('visual-regression: baselines updated');
+      console.log('visual-regression: all green');
+    }
+  }
+  return { snaps, failures, expected };
 }
-if (!UPDATE) {
-  // remove stale baselines for boards that no longer exist
-  for (const f of readdirSync(SNAP)) if (f.endsWith('.png') && !expected.includes(f)) failures.push('stale:' + f);
-}
-console.log(`visual-regression: ${snaps} kit boards, ${failures.length} mismatch(es)`);
-if (failures.length) {
-  for (const f of failures.slice(0, 30)) console.log('  FAIL ' + f);
-  if (failures.length > 30) console.log('  ... and ' + (failures.length - 30) + ' more');
-  console.log('visual-regression: MISMATCH — run with --update if the change is intentional');
-  process.exitCode = 1;
-} else {
-  if (UPDATE) console.log('visual-regression: baselines updated');
-  console.log('visual-regression: all green');
+
+// Only self-execute when invoked directly, not when imported by regression.mjs.
+const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (invokedDirectly) {
+  const { failures } = checkVisualRegression({ update: UPDATE });
+  if (failures.length) process.exitCode = 1;
 }

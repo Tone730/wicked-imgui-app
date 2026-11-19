@@ -2,8 +2,10 @@
 //
 //   node qa.mjs
 //
-// Runs: functional regression, static validation, updater tests, server tests,
-// generated-export compile checks, and kit-board visual regression.
+// Runs: functional regression (which now also verifies all 118 kit-board PNG
+// baselines), static validation, updater tests, server tests, and generated-export
+// compile checks. The standalone visual gate remains for a clear separate signal
+// and for --update baseline regeneration.
 import { spawnSync } from 'child_process';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';

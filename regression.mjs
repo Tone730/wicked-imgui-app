@@ -868,6 +868,17 @@ check('expanded font list + text styles are available', () => {
     && model.WIDGETS.text.props.some(x => x.key === 'textStyle');
 });
 
+// ---- Visual regression: kit-board PNG baselines ----------------------------
+// Folded into the main gate so `node regression.mjs` alone cannot miss palette
+// or label drift across the 118 shipped kit boards.
+const { checkVisualRegression } = await import('./visual-regression.mjs');
+const visual = checkVisualRegression({ log: false });
+for (const name of visual.expected) {
+  ok('visual board ' + name, !visual.failures.includes(name));
+}
+const staleBaselines = visual.failures.filter((f) => f.startsWith('stale:'));
+ok('no stale visual baselines', staleBaselines.length === 0, staleBaselines.join(', '));
+
 // ---- Summary ---------------------------------------------------------------
 console.log('regression: ' + passed + ' checks passed');
 if (failures.length) {

@@ -1,0 +1,12 @@
+{
+  "name": "wicked-imgui-maker-qa",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Offline QA runners for Wicked ImGui Maker. No runtime dependencies — everything uses Node, Python and the checked-in toolchains.",
+  "scripts": {
+    "test": "node qa.mjs",
+    "test:regression": "node regression.mjs",
+    "test:visual": "node visual-regression.mjs",
+    "visual:update": "node visual-regression.mjs --update"
+  }
+}

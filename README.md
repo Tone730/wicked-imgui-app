@@ -106,6 +106,20 @@ The shipped portable build is **unsigned** and hash-verified. `sign.ps1` will si
 - The bundled runtime sources are offline compatibility stubs: export produces a complete source tree that compiles and runs with local toolchains (C++ DX11/DX9/DX12/OpenGL3/Vulkan, C#, Rust), but real ImGui rendering needs the full vendor runtime. Settings → Build & run displays this disclosure in-product.
 - Packaged PE version resources are rewritten from `app/package.json`; Windows file and product version metadata now match the released version (currently 2.2.1).
 
+## Local QA
+
+```
+npm test                 # every gate, fully offline (npm.cmd test on Windows PowerShell)
+node regression.mjs      # functional suite + all 118 kit-board baselines
+node visual-regression.mjs --update   # regenerate PNG baselines after an intentional palette/label change
+```
+
+`node regression.mjs` folds in the visual-regression baselines, so a palette or label
+drift fails the main gate even when only the functional suite is run. `npm test`
+(calling `qa.mjs`) adds static validation, updater tests, server API tests and
+generated-export compile checks. Baseline changes must be deliberate: update them
+with `--update`, then re-run `npm test` before publishing.
+
 ## One-command publish
 
 ```
