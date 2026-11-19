@@ -1,0 +1,16 @@
+{
+  "name": "wicked-imgui-maker",
+  "productName": "Wicked ImGui Maker",
+  "version": "2.2.0",
+  "description": "Wicked ImGui Maker — a powerful ImGui window, loader, and interface builder with expanded widgets, theming, code generation, and workflow tools.",
+  "main": "main.cjs",
+  "type": "module",
+  "author": "Wicked",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "monaco-editor": "^0.57.0",
+    "three": "0.170.0"
+  }
+}

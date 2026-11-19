@@ -1,0 +1,11 @@
+# Reverse-engineered input and built binaries are not source.
+app_original_backup/
+runtime/
+dist/
+assets-new/
+
+# Local caches and temporary files.
+__pycache__/
+node_modules/
+*.log
+*.tmp
