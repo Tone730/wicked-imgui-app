@@ -25,7 +25,7 @@ function Find-Signtool {
 
 $tool = Find-Signtool
 if ($DryRun) {
-  Write-Host "DRY RUN — no signing performed."
+  Write-Host "DRY RUN - no signing performed."
   Write-Host "Target: $Exe"
   $certLabel = if ($Thumbprint) { "thumbprint $Thumbprint" } elseif ($Pfx) { "PFX $Pfx" } else { "NONE (would skip)" }
   Write-Host "Certificate: $certLabel"
