@@ -2,6 +2,13 @@
 
 A standalone, locally rebuilt ImGui interface builder. The working tree contains the application source, the unpacked Electron runtime, and local scripts used to rebuild the packaged app.
 
+## Related repositories
+
+- Live dashboard / download page: https://tone730.github.io/wicked-imgui-site/
+- Dashboard source: https://github.com/Tone730/wicked-imgui-site
+- Release artifacts and update feeds: https://github.com/Tone730/wicked-imgui-releases
+- This rebuilt app source: https://github.com/Tone730/wicked-imgui-app
+
 ## What is in this folder
 
 - `app/` — application source packed into `resources/app.asar`.
