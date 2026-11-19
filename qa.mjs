@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 const root = dirname(fileURLToPath(import.meta.url));
 const steps = [
   ['functional regression', 'node', ['regression.mjs']],
+  ['AI intent contract', 'node', ['test-ai-contract.js']],
   ['static validation', 'python', ['validate.py']],
   ['updater runtime', 'node', ['test-updater.js']],
   ['server API', 'node', ['C:/Users/Wick/wicked-imgui/server/test.js']],

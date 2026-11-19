@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node qa.mjs",
     "test:regression": "node regression.mjs",
+    "test:ai-contract": "node test-ai-contract.js",
     "test:visual": "node visual-regression.mjs",
     "visual:update": "node visual-regression.mjs --update"
   }
