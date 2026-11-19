@@ -599,6 +599,54 @@ export const PREMADE_TEMPLATES = [
     tags: ['dark', 'green', 'dashboard', 'figma', 'exact'], size: [1440, 960],
     approximate: false, build: () => buildKitProject('lazyui-combat'),
   },
+  {
+    id: 'imjson-demo', name: 'ImJson Theme Demo', author: 'moleium/imjson (MIT, static source)',
+    description: 'Neutral-grey JSON theme demo: 1280x720, Float slider, Button, Counter readout, Checkbox and a Style Editor, with every grey/rounding value transcribed from the example JSON.',
+    tags: ['dark', 'grey', 'json', 'theme', 'exact'], size: [1280, 720],
+    approximate: false, build: () => buildKitProject('imjson-demo'),
+  },
+  {
+    id: 'vision-menu', name: 'Vision Overlay Menu', author: 'SharimAli/imgui-menu-clone (MIT, static source)',
+    description: 'Purple VISION overlay: 800x405, Recoil/Misc/Settings/Configs tabs, Poppins + Bungee fonts, custom toggle/keybind/slider/colour-picker widgets and a live accent picker.',
+    tags: ['dark', 'purple', 'overlay', 'menu', 'exact'], size: [800, 405],
+    approximate: false, build: () => buildKitProject('vision-menu'),
+  },
+  {
+    id: 'dear-imgui-styles', name: 'Dear ImGui Styles Collection', author: 'GraphicsProgramming/dear-imgui-styles (MIT, static source)',
+    description: 'Five community styles as editable colour boards: Cinder pink-on-slate, Adobe Spectrum symbolic roles, cyan enemymouse, cream+green ledSynthmaster and light blue dougblinks.',
+    tags: ['theme', 'palette', 'reference', 'exact'], size: [900, 620],
+    approximate: false, build: () => buildKitProject('dear-imgui-styles'),
+  },
+  {
+    id: 'imgui-candy', name: 'ImguiCandy Themes', author: 'Raais/ImguiCandy (MIT, static source)',
+    description: 'Three themes plus 24 brand colour constants: Blender steel blue, Cyberpunk violet/cyan and Nord slate, all reset from StyleColorsDark.',
+    tags: ['theme', 'palette', 'cyberpunk', 'nord', 'exact'], size: [900, 620],
+    approximate: false, build: () => buildKitProject('imgui-candy'),
+  },
+  {
+    id: 'untitled-theme-editor', name: 'Untitled ImGui Theme Editor', author: 'MadLadSquad/UntitledImGuiTheme (MIT, static source)',
+    description: 'YAML theme serialiser reference: 60+ colour keys, full style-variable list, semantic colours and the load/save/editor API as editable rows. No bundled palette exists upstream.',
+    tags: ['theme', 'editor', 'yaml', 'reference', 'exact'], size: [900, 620],
+    approximate: false, build: () => buildKitProject('untitled-theme-editor'),
+  },
+  {
+    id: 'clean-menu', name: 'Clean ImGui Menu (Evicted)', author: 'vayn1337/Clean-imgui-menu (MIT, static source)',
+    description: 'Red-accent "Hola!" overlay: 905x624, 9 icon tabs, embedded Segoe UI/icon fonts, Slider Intager 1-400, Aimbot Mode Always/Toggle and keybind widget.',
+    tags: ['dark', 'red', 'overlay', 'menu', 'exact'], size: [905, 624],
+    approximate: false, build: () => buildKitProject('clean-menu'),
+  },
+  {
+    id: 'lumin-menu', name: 'Lumin Free ImGui Menu', author: 'poncippg-spec/Lumin-Free-Imgui-Menu (MIT, static source)',
+    description: 'Periwinkle #B0B4FF control panel: 570x354, demo license gate, 10 tabs + 5 sub-tabs, exact feature sliders, combos, switches, colorpickers and toast strings.',
+    tags: ['dark', 'periwinkle', 'panel', 'menu', 'exact'], size: [570, 354],
+    approximate: false, build: () => buildKitProject('lumin-menu'),
+  },
+  {
+    id: 'hello-imgui-themes', name: 'hello_imgui Theme Library', author: 'pthom/hello_imgui (MIT, static source)',
+    description: '17-theme library with Theme Tweaks sliders, exact palettes for MaterialFlat/Photoshop/Gray/Cherry/Darcula/SoDark/LightRounded and the classic/docking demo widget strings.',
+    tags: ['theme', 'palette', 'reference', 'demo', 'exact'], size: [900, 620],
+    approximate: false, build: () => buildKitProject('hello-imgui-themes'),
+  },
 ];
 
 export function buildPremade(id) {

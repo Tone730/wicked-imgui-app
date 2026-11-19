@@ -302,8 +302,8 @@ for (const [label, prompt, verify] of advancedAiCases) {
 }
 
 // ---- 8c. Source-derived UI kit catalog + offline AI ------------------------
-const kitIds = ['kali-dark', 'cloudy-light', 'givenchy-gold', 'eon-wtf', 'fortnite-external', 'fn-external', 'loader-template', 'hat-ui', 'lazyui-combat'];
-ok('UI kit registry', uikit.UI_KIT_IDS.length === 9 && kitIds.every((id) => uikit.UI_KIT_IDS.includes(id)));
+const kitIds = ['kali-dark', 'cloudy-light', 'givenchy-gold', 'eon-wtf', 'fortnite-external', 'fn-external', 'loader-template', 'hat-ui', 'lazyui-combat', 'imjson-demo', 'vision-menu', 'dear-imgui-styles', 'imgui-candy', 'untitled-theme-editor', 'clean-menu', 'lumin-menu', 'hello-imgui-themes'];
+ok('UI kit registry', uikit.UI_KIT_IDS.length === 17 && kitIds.every((id) => uikit.UI_KIT_IDS.includes(id)));
 check('UI kit recipes target real widgets/actions', () => Object.values(uikit.CONTROL_RECIPES)
   .every((r) => (r.widget && model.WIDGETS[r.widget]) || (r.action && model.ACTIONS[r.action])));
 check('UI kit presets all exist', () => kitIds.every((id) => {
@@ -326,6 +326,34 @@ for (const id of kitIds) {
     return out.stats.pagesAdded >= 1 && out.stats.added >= 10 && patch.summary.includes(uikit.getKit(id).name);
   });
 }
+check('new online kits detected in AI requests', () => {
+  const ids = uikit.detectKitRequests('Recreate the Vision Overlay Menu and the Lumin Free ImGui Menu');
+  return ids.includes('vision-menu') && ids.includes('lumin-menu');
+});
+check('new online kits keep exact source strings', () => {
+  const grab = (id) => JSON.stringify(uikit.getKit(id));
+  return grab('clean-menu').includes('Slider Intager')
+    && grab('clean-menu').includes('Aimbot Mode')
+    && grab('lumin-menu').includes('License key required')
+    && grab('lumin-menu').includes('Tournament preset')
+    && grab('imjson-demo').includes('Counter = 0')
+    && grab('vision-menu').includes('Nothing here yet.')
+    && grab('hello-imgui-themes').includes('SoDark_AccentYellow')
+    && grab('imgui-candy').includes('Theme_Cyberpunk')
+    && grab('untitled-theme-editor').includes('DestructiveColor')
+    && grab('dear-imgui-styles').includes('StyleColorsSpectrum');
+});
+check('lexicon patch inserts a new-kit sampled control', () => {
+  const proj = model.createProject({ name: 'Lexicon2' });
+  proj.pages = [{ id: 'main', name: 'Main', widgets: [] }];
+  proj.startPage = 'main';
+  const ctx = JSON.stringify(aiShared.compactProject(proj)) + '\n\nRequest: add a "Slider Intager" control';
+  const patch = uikit.lexiconPatchFromRequest(ctx);
+  if (!patch) return 'no patch';
+  const out = aiShared.applyAiResult(proj, aiShared.parseAiJson(patch));
+  const w = out.project.pages[0].widgets[0];
+  return !!w && w.type === 'slider' && w.text === 'Slider Intager';
+});
 check('UI kit knowledge in AI prompts', () => {
   const prompt = aiShared.editSystemPrompt(model.createProject({ name: 'Prompt test' }));
   return prompt.includes('SOURCE-DERIVED UI KITS') && prompt.includes('#FFD700') && prompt.includes('CONTROL RECIPES');
@@ -369,7 +397,7 @@ check('new design systems detected in AI requests', () => {
   return ids.includes('hat-ui') && ids.includes('lazyui-combat');
 });
 check('premade registry builds every template', () => {
-  if (premade.PREMADE_TEMPLATES.length !== 12) return 'expected 12 templates';
+  if (premade.PREMADE_TEMPLATES.length !== 20) return 'expected 20 templates';
   return premade.PREMADE_TEMPLATES.every((t) => {
     try { const p = premade.buildPremade(t.id); return p && p.pages && p.pages.length > 0; }
     catch { return false; }
