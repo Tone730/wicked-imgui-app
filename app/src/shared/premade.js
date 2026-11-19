@@ -13,6 +13,14 @@ const W = (type, id, text, x, y, props = {}, extra = {}) => {
   if (extra.anim) w.anim = extra.anim;
   if (extra.w) w.w = extra.w;
   if (extra.h) w.h = extra.h;
+  if (!Array.isArray(w.actions)) w.actions = [];
+  // Template code chains `W(...).actions.push(action)`. Array#push returns the
+  // new length, which would turn the widget into a number in the widget array.
+  // Return the widget instead; non-enumerable keeps JSON/structuredClone clean.
+  Object.defineProperty(w.actions, 'push', {
+    value: function (...items) { Array.prototype.push.apply(this, items); return w; },
+    configurable: true, writable: true, enumerable: false,
+  });
   return w;
 };
 const fade = (i) => ({ type: 'slideUp', delay: Math.min(0.6, i * 0.035), duration: 0.45 });
@@ -267,6 +275,257 @@ function eonStyle() {
   return p;
 }
 
+/* ------------------------------ Kali.dev Loader --------------------------- */
+function kaliLoader() {
+  const p = base('Kali.dev Loader', {
+    accent: '#FFFFFF', accent2: '#F6F6F9', bg: '#131318',
+    frame: '#16161D', text: '#ECECF1', border: '#FFFFFF14',
+  }, 'segoe', 760, 560);
+  applyPreset(p, 'kali-dark');
+  p.pages = [];
+  const chrome = (suffix) => [
+    W('text', `kc_brand${suffix}`, 'KALI.DEV OR UR BRAND', 30, 26, { fontSize: 30, bold: true, color: '#15151B' }, { w: 360 }),
+    W('text', `kc_sub${suffix}`, 'YOUR TXT ', 31, 64, { fontSize: 12, color: '#4A4A56', letterSpacing: 2.2 }, { w: 300 }),
+    W('text', `kc_foot${suffix}`, 'UR TXT', 26, 522, { fontSize: 12, color: '#4A4A56' }, { w: 200 }),
+    W('text', `kc_ver${suffix}`, 'SECURE // KALI.DEV v2.0.1', 470, 520, { fontSize: 12, color: '#4A4A56', align: 'right' }, { w: 264 }),
+    W('iconbutton', `kc_min${suffix}`, '─', 676, 8, { glyph: 'circle', fontSize: 18 }, { w: 34, h: 28 }).actions.push({ type: 'minimize' }),
+    W('iconbutton', `kc_close${suffix}`, '✕', 714, 8, { glyph: 'circle', fontSize: 16 }, { w: 34, h: 28 }).actions.push({ type: 'close' }),
+  ];
+  addPage(p, 'kali_signin', 'Sign In', [
+    ...chrome('_si'),
+    W('tabs', 'kc_tabs_si', 'SIGN IN|SIGN UP', 226, 146, { selected: 0, fontSize: 13, bold: true, letterSpacing: 1.6 }, { w: 308, h: 44 }),
+    W('panel', 'kc_card_si', 'Sign In', 200, 120, {}, { w: 360, h: 412 }),
+    W('input', 'kc_user', 'Username', 226, 216, { placeholder: 'Username', fontSize: 17 }, { w: 308, h: 40, anim: fade(0) }),
+    W('password', 'kc_pass', 'Password', 226, 272, { placeholder: 'Password', showToggle: true, fontSize: 17 }, { w: 308, h: 40, anim: fade(1) }),
+    W('button', 'kc_login', 'LOGIN', 226, 332, { fontSize: 13, bold: true, letterSpacing: 1.6, variant: 'filled' }, { w: 308, h: 48, anim: fade(2) }).actions.push(
+      { type: 'login', user: 'demo', pass: 'demo', error: 'Invalid username or password.', page: 'kali_dashboard' }),
+    W('button', 'kc_forgot', 'Forgot password? Contact support', 226, 464,
+      { variant: 'link', fontSize: 12, color: '#8A8A98' }, { w: 308, h: 20 }).actions.push(
+      { type: 'toast', text: 'Kali.dev support: support@kali.dev', kind: 'info' }),
+    W('text', 'kc_msg', '', 226, 412, { fontSize: 12, align: 'center', color: '#8A8A98' }, { w: 308 }),
+    W('button', 'kc_goto_su', 'SIGN UP', 226, 190, { variant: 'ghost', fontSize: 11 }, { w: 308, h: 24 }).actions.push({ type: 'goto', page: 'kali_signup' }),
+  ]);
+  addPage(p, 'kali_signup', 'Sign Up', [
+    ...chrome('_su'),
+    W('tabs', 'kc_tabs_su', 'SIGN IN|SIGN UP', 226, 146, { selected: 1, fontSize: 13, bold: true, letterSpacing: 1.6 }, { w: 308, h: 44 }),
+    W('panel', 'kc_card_su', 'Sign Up', 200, 120, {}, { w: 360, h: 412 }),
+    W('input', 'kc_su_key', 'KALI-XXXX-XXXX-XXXX', 226, 216, { placeholder: 'KALI-XXXX-XXXX-XXXX', fontSize: 17 }, { w: 308, h: 40, anim: fade(0) }),
+    W('input', 'kc_su_user', 'Username', 226, 270, { placeholder: 'Username', fontSize: 17 }, { w: 308, h: 40, anim: fade(1) }),
+    W('password', 'kc_su_pass', 'Password (min 6 chars)', 226, 324, { placeholder: 'Password (min 6 chars)', showToggle: true, fontSize: 17 }, { w: 308, h: 40, anim: fade(2) }),
+    W('password', 'kc_su_pass2', 'Repeat the password', 226, 378, { placeholder: 'Repeat the password', showToggle: true, fontSize: 17 }, { w: 308, h: 40, anim: fade(3) }),
+    W('button', 'kc_su_btn', 'CREATE ACCOUNT', 226, 432, { fontSize: 13, bold: true, letterSpacing: 1.6, variant: 'filled' }, { w: 308, h: 48, anim: fade(4) }).actions.push(
+      { type: 'toast', text: 'Account created! Please sign in.', kind: 'success' }),
+    W('text', 'kc_su_msg', '', 226, 498, { fontSize: 12, align: 'center', color: '#57E396' }, { w: 308 }),
+    W('button', 'kc_goto_si', 'SIGN IN', 226, 190, { variant: 'ghost', fontSize: 11 }, { w: 308, h: 24 }).actions.push({ type: 'goto', page: 'kali_signin' }),
+  ]);
+  addPage(p, 'kali_dashboard', 'Dashboard', [
+    ...chrome('_db'),
+    W('panel', 'kc_card_db', 'Dashboard', 200, 120, {}, { w: 360, h: 412 }),
+    W('avatar', 'kc_avatar', 'W', 226, 146, { shape: 'circle', bg: '#FFFFFF', textColor: '#15151B', fontSize: 22 }, { w: 46, h: 46 }),
+    W('text', 'kc_welcome', 'WELCOME BACK', 284, 152, { fontSize: 16, bold: true, letterSpacing: 2.4 }, { w: 260 }),
+    W('button', 'kc_logout', 'LOG OUT', 462, 146, { variant: 'link', fontSize: 12, letterSpacing: 1.4, color: '#8A8A98' }, { w: 72, h: 30 }).actions.push({ type: 'goto', page: 'kali_signin' }),
+    W('text', 'kc_plan_l', 'PLAN', 226, 212, { fontSize: 12, color: '#8A8A98' }, { w: 120 }),
+    W('text', 'kc_plan_v', 'LIFETIME', 414, 212, { fontSize: 12, color: '#ECECF1', align: 'right' }, { w: 120 }),
+    W('text', 'kc_key_l', 'KEY', 226, 246, { fontSize: 12, color: '#8A8A98' }, { w: 120 }),
+    W('text', 'kc_key_v', 'KALI-****-****-****', 354, 246, { fontSize: 12, align: 'right' }, { w: 180 }),
+    W('text', 'kc_exp_l', 'EXPIRES', 226, 280, { fontSize: 12, color: '#8A8A98' }, { w: 120 }),
+    W('text', 'kc_exp_v', 'NEVER', 414, 280, { fontSize: 12, color: '#57E396', align: 'right' }, { w: 120 }),
+    W('button', 'kc_launch', 'LAUNCH', 226, 366, { fontSize: 13, bold: true, letterSpacing: 1.6, variant: 'filled' }, { w: 308, h: 48, anim: fade(0) }).actions.push(
+      { type: 'load', seconds: 3, page: 'kali_dashboard' }),
+    W('text', 'kc_loading', 'LOADING', 226, 424, { fontSize: 12, letterSpacing: 2 }, { w: 200 }),
+    W('text', 'kc_pct', '0%', 444, 424, { fontSize: 12, align: 'right' }, { w: 90 }),
+    W('progress', 'kc_bar', 'Progress', 226, 442, { value: 0, rounding: 4, fill: '#FFFFFF', track: '#FFFFFF14', showText: false }, { w: 308, h: 8 }),
+    W('text', 'kc_status', 'Press LAUNCH to start the demo loader', 226, 460, { fontSize: 12, letterSpacing: 2, color: '#8A8A98' }, { w: 308 }),
+  ]);
+  p.startPage = 'kali_signin';
+  p.fonts = [
+    { name: 'Segoe UI', source: 'C:/Windows/Fonts/segoeui.ttf', license: 'system' },
+    { name: 'Segoe UI Semibold', source: 'C:/Windows/Fonts/seguisb.ttf', license: 'system' },
+  ];
+  return p;
+}
+
+/* ------------------------------- Cloudy UI -------------------------------- */
+function cloudyUi() {
+  const p = base('Cloudy UI', {
+    accent: '#0A9BF5', accent2: '#13967C', bg: '#FCFDFD',
+    frame: '#FFFFFF', text: '#181A1D', border: '#E9ECEF',
+  }, 'poppins', 900, 580);
+  applyPreset(p, 'cloudy-light');
+  p.pages = [];
+  addPage(p, 'cloudy_welcome', 'welcome back', [
+    W('text', 'cy_title', 'cloudyspoofer.cc', 26, 12, { fontSize: 19, bold: true, color: '#1C1E22' }, { w: 300, h: 30 }),
+    W('iconbutton', 'cy_close', '✕', 850, 5, { glyph: 'circle', fontSize: 16 }, { w: 36, h: 36 }).actions.push({ type: 'close' }),
+    W('panel', 'cy_art', 'no artwork yet', 20, 45, { bg: '#F8F9FB', border: '#EBEEF1' }, { w: 410, h: 535 }),
+    W('text', 'cy_art_hint', 'drop a png/jpg on the window, or save it as assets\\miku.png', 44, 500, { fontSize: 12, color: '#ACB4BE' }, { w: 370 }),
+    W('text', 'cy_heading', 'welcome back', 460, 105, { fontSize: 43, bold: true }, { w: 420, h: 60 }),
+    W('text', 'cy_sub', 'Please sing in to continue', 460, 160, { fontSize: 18, color: '#6B7280' }, { w: 420 }),
+    W('text', 'cy_user_l', 'USERNAME', 460, 250, { fontSize: 13, letterSpacing: 0.7, align: 'right', color: '#9CA3AF' }, { w: 380 }),
+    W('input', 'cy_user', 'Enter your username', 460, 272, { placeholder: 'Enter your username', fontSize: 20, bg: 'transparent', border: '#E2E6E9' }, { w: 380, h: 52, anim: fade(0) }),
+    W('text', 'cy_pass_l', 'PASSWORD', 460, 340, { fontSize: 13, letterSpacing: 0.7, align: 'right', color: '#9CA3AF' }, { w: 380 }),
+    W('password', 'cy_pass', 'Enter your password', 460, 362, { placeholder: 'Enter your password', showToggle: true, fontSize: 20, bg: 'transparent', border: '#E2E6E9' }, { w: 380, h: 68, anim: fade(1) }),
+    W('checkbox', 'cy_remember', 'Remember me', 460, 448, { value: true, fontSize: 18, color: '#6B7280' }, { anim: fade(2) }),
+    W('button', 'cy_signin', 'sign in', 460, 486, { variant: 'filled', fontSize: 21, bold: true, bg: '#0A9BF5', rounding: 28 }, { w: 380, h: 56, anim: fade(3) }).actions.push({ type: 'goto', page: 'cloudy_spoofer' }),
+  ]);
+  addPage(p, 'cloudy_spoofer', 'spoofer', [
+    W('text', 'cy_title2', 'cloudyspoofer.cc', 26, 12, { fontSize: 19, bold: true, color: '#1C1E22' }, { w: 300, h: 30 }),
+    W('iconbutton', 'cy_close2', '✕', 850, 5, { glyph: 'circle', fontSize: 16 }, { w: 36, h: 36 }).actions.push({ type: 'close' }),
+    W('text', 'cy_heading2', 'spoofer', 40, 63, { fontSize: 42, bold: true }, { w: 400, h: 58 }),
+    W('text', 'cy_sub2', 'Hardware Identifiers & Protection', 44, 122, { fontSize: 18, color: '#6B7280' }, { w: 520 }),
+    W('text', 'cy_user2', 'User: smaxy', 660, 69, { fontSize: 18, align: 'right' }, { w: 200 }),
+    W('text', 'cy_lic', 'License: Lifetime Unlimited', 560, 103, { fontSize: 18, color: '#13967C', align: 'right' }, { w: 300 }),
+    W('panel', 'cy_card', 'Hardware IDs', 40, 178, { bg: '#FCFDFD', border: '#E8EBEE' }, { w: 820, h: 250 }),
+    W('text', 'cy_r1l', 'Board Serial', 72, 200, { fontSize: 19 }, { w: 240 }),
+    W('badge', 'cy_r1v', 'Not read yet', 470, 196, { bg: '#FFFFFF', border: '#DCE0E4' }, { w: 356, h: 40 }),
+    W('text', 'cy_r2l', 'Volume Serial', 72, 258, { fontSize: 19 }, { w: 240 }),
+    W('badge', 'cy_r2v', '5BC2-F2D7', 470, 254, { bg: '#FFFFFF', border: '#DCE0E4' }, { w: 356, h: 40 }),
+    W('text', 'cy_r3l', 'MAC Address', 72, 316, { fontSize: 19 }, { w: 240 }),
+    W('badge', 'cy_r3v', '02-8E-72-3B-36-C9', 470, 312, { bg: '#FFFFFF', border: '#DCE0E4' }, { w: 356, h: 40 }),
+    W('text', 'cy_r4l', 'System UUID', 72, 374, { fontSize: 19 }, { w: 240 }),
+    W('badge', 'cy_r4v', 'Not read yet', 470, 370, { bg: '#FFFFFF', border: '#DCE0E4' }, { w: 356, h: 40 }),
+    W('button', 'cy_spoof', 'SPOOF', 40, 470, { variant: 'filled', fontSize: 21, bold: true, bg: '#0A9BF5', rounding: 28 }, { w: 396, h: 58, anim: fade(0) }).actions.push(
+      { type: 'toast', text: 'SPOOF clicked - UI demo only, nothing on this machine is touched', kind: 'info' }),
+    W('button', 'cy_clean', 'CLEAN', 464, 470, { variant: 'filled', fontSize: 21, bold: true, bg: '#0A9BF5', rounding: 28 }, { w: 396, h: 58, anim: fade(1) }).actions.push(
+      { type: 'toast', text: 'CLEAN clicked - UI demo only, nothing on this machine is touched', kind: 'info' }),
+  ]);
+  p.startPage = 'cloudy_welcome';
+  p.fonts = [
+    { name: 'Poppins Regular', file: 'assets/fonts/Poppins-Regular.ttf', license: 'OFL-1.1' },
+    { name: 'Poppins Medium', file: 'assets/fonts/Poppins-Medium.ttf', license: 'OFL-1.1' },
+    { name: 'Poppins Bold', file: 'assets/fonts/Poppins-Bold.ttf', license: 'OFL-1.1' },
+  ];
+  return p;
+}
+
+/* -------------------------------- Givenchy -------------------------------- */
+function givenchy() {
+  const p = base('Givenchy Standalone Menu', {
+    accent: '#FFD700', accent2: '#D8C06F', bg: '#141418',
+    frame: '#17161B', text: '#FFFFFF', border: '#1E1D25',
+  }, 'inter', 720, 445);
+  applyPreset(p, 'givenchy-gold');
+  p.pages = [];
+  const topTabs = (sel) => W('tabs', `gv_tabs${sel}`, 'COMBAT|VISUALS|EXPLOITS|MISC', 0, 0,
+    { selected: sel, fontSize: 12, letterSpacing: 0.5 }, { w: 720, h: 50 });
+  const info = (tag, sub) => [
+    W('text', `gv_dot${tag}`, '✛', 15, 58, { fontSize: 14, color: '#FFD700' }, { w: 20 }),
+    W('text', `gv_tab${tag}`, tag, 38, 57, { fontSize: 15, bold: true }, { w: 160 }),
+    W('text', `gv_sep${tag}`, '•', 158, 57, { fontSize: 14, color: '#FFD700' }, { w: 12 }),
+    W('text', `gv_sub${tag}`, sub, 174, 57, { fontSize: 14, color: '#FFD700' }, { w: 260 }),
+    W('iconbutton', `gv_gear${tag}`, '⚙', 682, 55, { glyph: 'circle', fontSize: 14 }, { w: 24, h: 24 }),
+  ];
+  addPage(p, 'gv_combat', 'Combat / Aimbot', [
+    topTabs(0), ...info('Combat', 'Aimbot'),
+    W('panel', 'gv_a1', 'Aimbot', 15, 95, {}, { w: 337, h: 176 }),
+    W('checkbox', 'gv_aim_en', 'Enable Aimbot', 25, 120, { value: true }),
+    W('combo', 'gv_aim_type', 'Aimbot Type', 25, 152, {}, { w: 310 }),
+    W('checkbox', 'gv_sticky', 'Sticky Aim', 25, 190, {}),
+    W('checkbox', 'gv_drawfov', 'Draw FOV', 25, 220, {}),
+    W('hotkey', 'gv_aim_key', 'Aimbot key (press)', 25, 250, { key: 'Insert' }, { w: 310 }),
+    W('panel', 'gv_a2', 'Aimbot Settings', 368, 95, {}, { w: 337, h: 176 }),
+    W('combo', 'gv_hitbox', 'Target Hitbox', 378, 120, {}, { w: 310 }),
+    W('slider', 'gv_fov', 'FOV Size', 378, 186, { min: 1, max: 1000, value: 180 }, { w: 310 }),
+    W('slider', 'gv_smooth', 'Mouse Smooth', 378, 231, { min: 1, max: 100, value: 20 }, { w: 310 }),
+    W('panel', 'gv_a3', 'Aimbot Checks', 15, 281, {}, { w: 337, h: 150 }),
+    W('checkbox', 'gv_team', 'Team Check', 25, 306, { value: true }),
+    W('checkbox', 'gv_wall', 'Wall Check', 25, 336, { value: true }),
+    W('checkbox', 'gv_fovchk', 'FOV Check', 25, 366, { value: true }),
+    W('checkbox', 'gv_ko', 'KO Check', 25, 396, { value: true }),
+    W('panel', 'gv_a4', 'Prediction & Shake', 368, 281, {}, { w: 337, h: 150 }),
+    W('slider', 'gv_predx', 'Mouse Prediction X', 378, 306, { min: 1, max: 20, value: 5 }, { w: 310 }),
+    W('slider', 'gv_predy', 'Mouse Prediction Y', 378, 351, { min: 1, max: 20, value: 5 }, { w: 310 }),
+    W('checkbox', 'gv_shake', 'Enable Shake', 378, 396, {}),
+  ]);
+  addPage(p, 'gv_silent', 'Combat / Silent', [
+    topTabs(0), ...info('Combat', 'Silent'),
+    W('panel', 'gv_s1', 'Silent', 15, 95, {}, { w: 690, h: 130 }),
+    W('checkbox', 'gv_silent_en', 'Enable Silent Aim', 25, 120, {}),
+    W('hotkey', 'gv_silent_key', 'Silent Aim Key (press)', 25, 152, { key: 'Insert' }, { w: 300 }),
+    W('panel', 'gv_s2', 'Settings', 15, 235, {}, { w: 690, h: 190 }),
+    W('checkbox', 'gv_use_fov', 'Use FOV', 25, 260, { value: true }),
+    W('checkbox', 'gv_draw_fov2', 'Draw FOV', 25, 290, {}),
+    W('slider', 'gv_fov2', 'FOV Size', 25, 330, { min: 1, max: 1000, value: 180 }, { w: 300 }),
+  ]);
+  addPage(p, 'gv_visuals', 'Visuals', [
+    topTabs(1), ...info('Visuals', 'Visuals'),
+    W('panel', 'gv_v1', 'Visuals', 15, 95, {}, { w: 337, h: 280 }),
+    W('combo', 'gv_filter', 'Player Filter', 25, 120, {}, { w: 310 }),
+    W('checkbox', 'gv_box', 'Box', 25, 162, { value: true }),
+    W('colorpicker', 'gv_box_col', 'Box Color', 25, 192, { value: '#FFD700' }),
+    W('checkbox', 'gv_skel', 'Skeleton', 25, 232, { value: true }),
+    W('checkbox', 'gv_tracers', 'Tracers', 25, 262, {}),
+    W('checkbox', 'gv_health', 'Health Bar', 25, 292, { value: true }),
+    W('checkbox', 'gv_name', 'Display Username', 25, 322, {}),
+    W('panel', 'gv_v2', 'Visuals Settings', 368, 95, {}, { w: 337, h: 280 }),
+    W('slider', 'gv_box_thick', 'Box Thickness', 378, 120, { min: 1, max: 10, value: 2 }, { w: 310 }),
+    W('combo', 'gv_box_style', 'Box Style', 378, 165, {}, { w: 310 }),
+    W('combo', 'gv_tracer', 'Tracer Type', 378, 230, {}, { w: 310 }),
+    W('slider', 'gv_skel_thick', 'Skeleton Thickness', 378, 295, { min: 0.5, max: 5, value: 1.5, decimals: 1 }, { w: 310 }),
+    W('colorpicker', 'gv_grad1', 'Gradient Color 1', 378, 340, { value: '#FFD700' }),
+  ]);
+  addPage(p, 'gv_exploits', 'Exploits', [
+    topTabs(2), ...info('Exploits', 'Exploits'),
+    W('panel', 'gv_e1', 'Exploits', 15, 95, {}, { w: 337, h: 200 }),
+    W('checkbox', 'gv_bypass', 'Bypass Jump Cooldown', 25, 120, {}),
+    W('checkbox', 'gv_hitbox', 'Hitbox Expander', 25, 150, {}),
+    W('checkbox', 'gv_models', 'Custom Models', 25, 180, {}),
+    W('checkbox', 'gv_spin', 'Spinbot', 25, 210, {}),
+    W('panel', 'gv_e2', 'Exploits Settings', 368, 95, {}, { w: 337, h: 200 }),
+    W('slider', 'gv_sizex', 'Size X', 378, 120, { min: 0.1, max: 30, value: 1, decimals: 1 }, { w: 310 }),
+    W('slider', 'gv_sizey', 'Size Y', 378, 165, { min: 0.1, max: 30, value: 1, decimals: 1 }, { w: 310 }),
+    W('slider', 'gv_sizez', 'Size Z', 378, 210, { min: 0.1, max: 30, value: 1, decimals: 1 }, { w: 310 }),
+    W('checkbox', 'gv_visualize', 'Visualize Hitbox', 378, 255, {}),
+  ]);
+  addPage(p, 'gv_movement', 'Movement', [
+    topTabs(2), ...info('Exploits', 'Movement'),
+    W('panel', 'gv_m1', 'Movement', 15, 95, {}, { w: 337, h: 160 }),
+    W('checkbox', 'gv_walk', 'Walkspeed', 25, 120, {}),
+    W('checkbox', 'gv_jump', 'Jump Power', 25, 150, {}),
+    W('checkbox', 'gv_noclip', 'Noclip', 25, 180, {}),
+    W('panel', 'gv_m2', 'Movement Settings', 368, 95, {}, { w: 337, h: 300 }),
+    W('combo', 'gv_speedtype', 'Speed Type', 378, 120, {}, { w: 310 }),
+    W('slider', 'gv_speed', 'Speed Hack', 378, 185, { min: 1, max: 1000, value: 100 }, { w: 310 }),
+    W('hotkey', 'gv_speed_key', 'TriggerBot key (press)', 378, 230, { key: 'Insert' }, { w: 310 }),
+    W('slider', 'gv_power', 'Power', 378, 282, { min: 1, max: 1000, value: 100 }, { w: 310 }),
+    W('hotkey', 'gv_noclip_key', 'Noclip key (press)', 378, 327, { key: 'Insert' }, { w: 310 }),
+  ]);
+  addPage(p, 'gv_clientsided', 'Client Sided', [
+    topTabs(2), ...info('Exploits', 'Client Sided'),
+    W('panel', 'gv_c1', 'Client Sided', 15, 95, {}, { w: 337, h: 180 }),
+    W('checkbox', 'gv_headless', 'Headless', 25, 120, {}),
+    W('checkbox', 'gv_korblox', 'Korblox', 25, 150, {}),
+    W('checkbox', 'gv_emote', 'Emote Changer', 25, 180, {}),
+    W('checkbox', 'gv_anim', 'Animation Changer', 25, 210, {}),
+    W('panel', 'gv_c2', 'Client Sided Settings', 368, 95, {}, { w: 337, h: 300 }),
+    W('combo', 'gv_emote_type', 'Emote Type', 378, 120, {}, { w: 310 }),
+    W('combo', 'gv_idle', 'Idle Animation', 378, 185, {}, { w: 310 }),
+    W('combo', 'gv_run', 'Run Animation', 378, 250, {}, { w: 310 }),
+    W('combo', 'gv_walkanim', 'Walk Animation', 378, 315, {}, { w: 310 }),
+  ]);
+  addPage(p, 'gv_settings', 'Settings', [
+    topTabs(3), ...info('Misc', 'Settings'),
+    W('panel', 'gv_s3', 'Settings', 15, 95, {}, { w: 337, h: 220 }),
+    W('checkbox', 'gv_vsync', 'Vsync', 25, 120, { value: true }),
+    W('checkbox', 'gv_streamproof', 'Streamproof', 25, 150, {}),
+    W('checkbox', 'gv_dex', 'DEX Explorer', 25, 180, {}),
+    W('checkbox', 'gv_watermark', 'Watermark', 25, 210, {}),
+    W('hotkey', 'gv_menu_key', 'Menu Keybind', 25, 240, { key: 'Insert' }, { w: 300 }),
+    W('combo', 'gv_perf', 'Performance', 25, 285, {}, { w: 300 }),
+    W('panel', 'gv_cfg', 'Configs', 368, 95, {}, { w: 337, h: 220 }),
+    W('combo', 'gv_sel_cfg', 'Select Config', 378, 120, {}, { w: 310 }),
+    W('input', 'gv_cfg_name', 'Config Name', 378, 185, { placeholder: 'Config Name' }, { w: 310 }),
+    W('button', 'gv_load', 'Load', 378, 235, { variant: 'filled' }, { w: 96, h: 28 }),
+    W('button', 'gv_save', 'Save', 482, 235, { variant: 'filled' }, { w: 96, h: 28 }),
+    W('button', 'gv_refresh', 'Refresh', 586, 235, { variant: 'outline' }, { w: 102, h: 28 }),
+  ]);
+  p.startPage = 'gv_combat';
+  p.fonts = [
+    { name: 'Embedded Sans (medium)', embedded: 'font_medium_binary', license: 'bundled' },
+    { name: 'Icon Font (icomoon)', embedded: 'icon_font_binary', license: 'bundled' },
+  ];
+  return p;
+}
+
 export const PREMADE_TEMPLATES = [
   {
     id: 'hackermarket', name: 'Hackermarket UI', author: 'Syntax (UI remake)',
@@ -293,6 +552,24 @@ export const PREMADE_TEMPLATES = [
     approximate: true,
     note: 'The supplied Eon archive is encrypted. This is an approximation from structurally-identical sibling projects; supply the password for exact fidelity.',
     build: eonStyle,
+  },
+  {
+    id: 'kali-loader', name: 'Kali.dev Loader', author: 'Kali.dev (UI remake)',
+    description: 'Monochrome auth loader: Sign In / Sign Up / Dashboard, white filled buttons, Segoe UI, letter-spaced labels, spinner/progress and masked license key. Editable.',
+    tags: ['dark', 'monochrome', 'auth', 'loader', 'segoe'], size: [760, 560],
+    approximate: false, build: kaliLoader,
+  },
+  {
+    id: 'cloudy-ui', name: 'Cloudy UI', author: 'cloudyspoofer.cc (UI remake)',
+    description: 'Light minimal spoofer UI: welcome/sign-in artwork pane, blue pill buttons, hardware-ID chips, teal license text and toast actions. Poppins font. Editable.',
+    tags: ['light', 'blue', 'pill', 'chips', 'poppins'], size: [900, 580],
+    approximate: false, build: cloudyUi,
+  },
+  {
+    id: 'givenchy', name: 'Givenchy Standalone Menu', author: 'Givenchy (UI remake)',
+    description: 'Gold-on-charcoal 720×445 menu: Combat / Visuals / Exploits / Misc top tabs with sub-tabs, two-column controls, checkboxes, sliders, combos, hotkeys, color pickers and configs. Editable.',
+    tags: ['dark', 'gold', 'tabs', 'two-column', 'overlay'], size: [720, 445],
+    approximate: false, build: givenchy,
   },
 ];
 

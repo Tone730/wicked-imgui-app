@@ -551,6 +551,30 @@ for (const t of premade.PREMADE_TEMPLATES) {
       && !!p.style && !!p.window;
   });
 }
+check('premade kali-loader fidelity', () => {
+  const p = premade.buildPremade('kali-loader');
+  const ids = p.pages.map(pg => pg.id);
+  const txt = p.pages.flatMap(pg => pg.widgets.map(w => w.text || '')).join('|');
+  return ['kali_signin', 'kali_signup', 'kali_dashboard'].every(id => ids.includes(id))
+    && ['LOGIN', 'CREATE ACCOUNT', 'WELCOME BACK', 'KALI-XXXX-XXXX-XXXX', 'SIGN IN', 'SIGN UP'].every(s => txt.includes(s))
+    && p.style.preset === 'kali-dark' && p.window.width === 760 && p.window.height === 560;
+});
+check('premade cloudy-ui fidelity', () => {
+  const p = premade.buildPremade('cloudy-ui');
+  const ids = p.pages.map(pg => pg.id);
+  const txt = p.pages.flatMap(pg => pg.widgets.map(w => w.text || '')).join('|');
+  return ['cloudy_welcome', 'cloudy_spoofer'].every(id => ids.includes(id))
+    && ['welcome back', 'Please sing in to continue', 'SPOOF', 'CLEAN', 'Hardware Identifiers & Protection'].every(s => txt.includes(s))
+    && p.style.preset === 'cloudy-light' && p.window.width === 900 && p.window.height === 580;
+});
+check('premade givenchy fidelity', () => {
+  const p = premade.buildPremade('givenchy');
+  const ids = p.pages.map(pg => pg.id);
+  const txt = p.pages.flatMap(pg => pg.widgets.map(w => w.text || '')).join('|');
+  return ['gv_combat', 'gv_silent', 'gv_visuals', 'gv_exploits', 'gv_movement', 'gv_clientsided', 'gv_settings'].every(id => ids.includes(id))
+    && ['Enable Aimbot', 'Target Hitbox', 'Walkspeed', 'Headless', 'Config Name', 'COMBAT|VISUALS|EXPLOITS|MISC'].every(s => txt.includes(s))
+    && p.style.preset === 'givenchy-gold' && p.window.width === 720 && p.window.height === 445;
+});
 check('webhook / discord / open_url actions emit in C++', () => {
   const p = model.createProject({ name: 'Act', language: 'cpp' });
   const w = model.createWidget('button', 'b1', 1, 2, { text: 'Go' });
