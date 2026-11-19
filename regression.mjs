@@ -24,6 +24,12 @@ const sourceDiff = await import(base + 'sourceDiff.js');
 const menus = await import(base + 'menus.js');
 const targetConfig = await import(base + 'targetConfig.js');
 const game = require('C:/Users/Wick/WickedImguiMaker/app/src/main/game.cjs');
+const vision = await import(base + 'vision.js');
+const assets = await import(base + 'assets.js');
+const loaders = await import(base + 'loaders.js');
+const learn = await import(base + 'learn.js');
+const library = await import(base + 'library.js');
+const premade = await import(base + 'premade.js');
 
 let passed = 0;
 const failures = [];
@@ -485,6 +491,84 @@ check('migrateProject keeps menu and target', () => {
   project.target = targetConfig.normalizeTarget({ renderer: 'vulkan' });
   const migrated = model.migrateProject(JSON.parse(JSON.stringify(project)));
   return !!migrated.menu && migrated.target.renderer === 'vulkan';
+});
+
+// ---- 17. v2.4.0 offline expansion modules ----------------------------------
+check('vision extracts widgets from C++ source', () => {
+  const info = vision.extractFeatures({
+    text: 'void M(){ ImGui::Button("Go"); ImGui::Checkbox("ESP", &e); ImGui::SliderFloat("FOV", &f, 0, 800); ImGui::Combo("Box", &b, items); }',
+    kind: 'cpp',
+  });
+  return info.features.length >= 4 && info.kind === 'cpp'
+    && vision.visionProject(info).project.pages.every(p => Array.isArray(p.widgets));
+});
+check('vision detects web / JS object menus', () => {
+  const info = vision.extractFeatures({ text: 'const menu={tabs:[{name:"Player",items:[{type:"checkbox",label:"Godmode"}]}]};', kind: 'web' });
+  return info.features.length >= 1;
+});
+check('vision never executes pasted code', () => {
+  const info = vision.extractFeatures({ text: 'while(true){ evil(); }', kind: 'cpp' });
+  return !!info && Array.isArray(info.features);
+});
+check('assets image round trip', () => {
+  const url = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const a = assets.createImageAsset(url, 'pixel.png');
+  const p = model.createProject({ name: 'A' });
+  assets.addAsset(p, a);
+  const back = assets.importAssetPack(assets.exportAssetPack(p, 't'));
+  return a.url === url && a.mime === 'image/png' && back.assets.length === 1
+    && /unsigned char/.test(assets.assetCpp(a, 'img'));
+});
+check('loaders detect + apply generic profile', () => {
+  const hints = loaders.detectLoaderHints('BOOL APIENTRY DllMain(...) { CreateThread(...); }');
+  const prof = loaders.makeProfile({ loader: 'external', api: 'dx11', language: 'cpp' });
+  const p = model.createProject({ name: 'L' });
+  loaders.applyProfile(p, prof);
+  return hints.hints.length >= 2 && p.overrides.loader === 'external'
+    && loaders.compatibilityChecklist(prof).length >= 3;
+});
+check('learn generates an editable prebuild', () => {
+  const a = model.createProject({ name: 'A' });
+  a.pages[0].widgets.push(model.createWidget('button', 'b', 1, 2, { text: 'Go' }));
+  const prof = learn.learnFromProjects([a]);
+  const built = learn.generatePrebuild(prof, { name: 'Pre' });
+  return built.pages.length >= 1 && /Learned from/.test(learn.describeProfile(prof));
+});
+check('library publish/search/pack round trip', () => {
+  const lib = library.createLibrary('T');
+  library.publishLocal(lib, model.createProject({ name: 'A' }), { name: 'Alpha', tags: ['dark'] });
+  const lib2 = library.parseLibrary(library.serializeLibrary(lib));
+  const imp = library.importPack(lib2, library.exportPack(lib, { name: 'P' }));
+  return lib.entries.length === 1
+    && library.searchEntries(lib, 'alpha').length === 1
+    && library.searchEntries(lib, '', 'dark').length === 1
+    && imp.added >= 1 && library.instantiateEntry(lib.entries[0]).pages.length >= 1;
+});
+for (const t of premade.PREMADE_TEMPLATES) {
+  check('premade template ' + t.id, () => {
+    const p = premade.buildPremade(t.id);
+    return p.pages.length >= 1 && p.pages.some(pg => pg.widgets.length > 0)
+      && !!p.style && !!p.window;
+  });
+}
+check('webhook / discord / open_url actions emit in C++', () => {
+  const p = model.createProject({ name: 'Act', language: 'cpp' });
+  const w = model.createWidget('button', 'b1', 1, 2, { text: 'Go' });
+  w.actions = [
+    { type: 'webhook', url: 'https://x', payload: '{}', method: 'POST' },
+    { type: 'discord', url: 'https://discord.gg/x', message: 'Join', username: 'W' },
+    { type: 'open_url', url: 'https://example.com' },
+  ];
+  p.pages[0].widgets.push(w);
+  const files = codegen.generateProject(p, {});
+  const ui = files.find(f => /ui|menu|project/i.test(f.path));
+  const body = ui?.content || '';
+  return /Webhook\(/.test(body) && /Discord\(/.test(body) && /OpenUrl\(/.test(body);
+});
+check('expanded font list + text styles are available', () => {
+  return model.FONTS.includes('outfit') && model.FONTS.includes('inter')
+    && model.FONT_CSS.outfit && model.TEXT_STYLES.includes('heading')
+    && model.WIDGETS.text.props.some(x => x.key === 'textStyle');
 });
 
 // ---- Summary ---------------------------------------------------------------

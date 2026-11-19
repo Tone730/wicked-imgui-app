@@ -156,6 +156,8 @@ public static partial class Kv
     public static void KeyLogin(string keyField, string keys, string page, string error) { }
     public static void Toggle(string target) { }
     public static void OpenUrl(string url) { }
+    public static void Webhook(string url, string payload, string method) { }
+    public static void Discord(string url, string message, string username) { }
     public static void Run(string path) { }
     public static void Copy(string text) { }
     public static void Minimize() { }

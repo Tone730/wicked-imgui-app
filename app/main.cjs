@@ -44,3 +44,82 @@ ipcMain["handle"]("menu:"+"importLibrary",async()=>{
     return{'ok':!![],'menus':list['map'](m=>normalizeMenu(m)),'file':pick['filePaths'][0x0]};
   }catch(U){return{'ok':![],'error':String(U['message']||U)};}
 });
+
+/* ---------------------- v2.4.0 offline expansion IPC ---------------------- */
+const v24LibPath=()=>path.join(app.getPath('userData'),'library.json');
+const v24ProfilePath=()=>path.join(app.getPath('userData'),'style-profile.json');
+async function v24LoadLibrary(){try{if(fs.existsSync(v24LibPath())){const m=await sharedModule('library');return m.parseLibrary(await fsp.readFile(v24LibPath(),'utf8'));}}catch{}const m=await sharedModule('library');return m.createLibrary();}
+async function v24SaveLibrary(lib){await fsp.mkdir(path.dirname(v24LibPath()),{recursive:true});await writeJsonAtomic(v24LibPath(),JSON.stringify(lib,null,2));return lib;}
+
+ipcMain.handle("v24:capabilities",async()=>({
+  ok:true,version:'2.4.0',
+  features:[
+    {id:'vision',label:'Menu understanding / mockup generator'},
+    {id:'images',label:'Embedded images & asset packs'},
+    {id:'loaders',label:'Multi-loader / multi-game compatibility'},
+    {id:'prebuild',label:'Learn from your work & generate prebuilds'},
+    {id:'library',label:'Local community template library'},
+    {id:'fonts',label:'Extended fonts & text styles'},
+    {id:'links',label:'Clickable links, webhooks & Discord buttons'},
+    {id:'premade',label:'Editable premade templates'},
+  ],
+}));
+
+ipcMain.handle("v24:vision",async(J,r)=>{
+  try{const m=await sharedModule('vision');
+    const info=m.extractFeatures({text:r?.text||'',kind:r?.kind||undefined});
+    const built=m.visionProject(info,{name:r?.name,type:r?.type,language:r?.language,backend:r?.backend});
+    return{ok:true,info,project:built.project,summary:m.visionSummary(info)};
+  }catch(U){return{ok:false,error:String(U.message||U)};}
+});
+
+ipcMain.handle("v24:premade",async(J,r)=>{
+  try{const m=await sharedModule('premade');
+    if(r?.action==='build')return{ok:true,project:m.buildPremade(r.id)};
+    return{ok:true,templates:m.premadeInfo()};
+  }catch(U){return{ok:false,error:String(U.message||U)};}
+});
+
+ipcMain.handle("v24:learn",async(J,r)=>{
+  try{const m=await sharedModule('learn');
+    const projects=Array.isArray(r?.projects)?r.projects:[];
+    const profile=r?.profile&&r.profile.format==='wicked-style-profile'?r.profile:m.learnFromProjects(projects);
+    if(r?.action==='prebuild')return{ok:true,profile,project:m.generatePrebuild(profile,r.options||{})};
+    return{ok:true,profile,summary:m.describeProfile(profile)};
+  }catch(U){return{ok:false,error:String(U.message||U)};}
+});
+
+ipcMain.handle("v24:library",async(J,r)=>{
+  try{const m=await sharedModule('library');const action=r?.action||'load';
+    if(action==='exportPack'){const lib=await v24LoadLibrary();const body=m.exportPack(lib,{ids:r.ids,name:r.name});const u=await dialog.showSaveDialog(win,{title:'Save Wicked template pack',defaultPath:'wicked-template-pack.json',filters:[{name:'Wicked packs',extensions:['json']}]});if(u.canceled)return{ok:false,canceled:true};await writeJsonAtomic(u.filePath,body);return{ok:true,file:u.filePath};}
+    if(action==='importPack'){const pick=await dialog.showOpenDialog(win,{title:'Open Wicked template pack',properties:['openFile'],filters:[{name:'Wicked packs',extensions:['json']}]});if(pick.canceled)return{ok:false,canceled:true};const text=await fsp.readFile(pick.filePaths[0],'utf8');const lib=await v24LoadLibrary();const res=m.importPack(lib,text);await v24SaveLibrary(res.library);return{ok:true,added:res.added,library:res.library};}
+    let lib=await v24LoadLibrary();
+    if(action==='publish'){m.publishLocal(lib,r.project,r.meta||{});await v24SaveLibrary(lib);return{ok:true,library:lib};}
+    if(action==='remove'){m.removeEntry(lib,r.id);await v24SaveLibrary(lib);return{ok:true,library:lib};}
+    if(action==='instantiate'){const e=lib.entries.find(x=>x.id===r.id);if(!e)return{ok:false,error:'not_found'};return{ok:true,project:m.instantiateEntry(e)};}
+    if(action==='addSource'){m.addSource(lib,r.source);await v24SaveLibrary(lib);return{ok:true,library:lib};}
+    if(action==='removeSource'){m.removeSource(lib,r.id);await v24SaveLibrary(lib);return{ok:true,library:lib};}
+    if(action==='exportLibrary'){const body=m.serializeLibrary(lib);const u=await dialog.showSaveDialog(win,{title:'Save Wicked library',defaultPath:'wicked-library.json',filters:[{name:'Wicked libraries',extensions:['json']}]});if(u.canceled)return{ok:false,canceled:true};await writeJsonAtomic(u.filePath,body);return{ok:true,file:u.filePath};}
+    return{ok:true,library:lib,entries:m.searchEntries(lib,r.query||'',r.tag||''),tags:m.allTags(lib)};
+  }catch(U){return{ok:false,error:String(U.message||U)};}
+});
+
+ipcMain.handle("v24:assets",async(J,r)=>{
+  try{const m=await sharedModule('assets');const action=r?.action||'import';
+    if(action==='import'){const pick=await dialog.showOpenDialog(win,{title:'Import image',properties:['openFile'],filters:[{name:'Images',extensions:['png','jpg','jpeg','webp','gif','bmp']}]});if(pick.canceled)return{ok:false,canceled:true};const file=pick.filePaths[0];const buf=await fsp.readFile(file);const ext=path.extname(file).replace('.','').toLowerCase();const mime=m.mimeFromExt(ext);const asset=m.createImageAsset('data:'+mime+';base64,'+buf.toString('base64'),path.basename(file),{mime});return{ok:true,asset};}
+    if(action==='source'){const asset=m.createImageAsset(r.data,r.name||'image',{id:r.id});return{ok:true,source:m.assetCpp(asset,r.symbol)};}
+    if(action==='exportPack'){const body=m.exportAssetPack({assets:r.assets||[]},r.name);const u=await dialog.showSaveDialog(win,{title:'Save Wicked asset pack',defaultPath:'wicked-assets.json',filters:[{name:'Wicked assets',extensions:['json']}]});if(u.canceled)return{ok:false,canceled:true};await writeJsonAtomic(u.filePath,body);return{ok:true,file:u.filePath};}
+    if(action==='importPack'){const pick=await dialog.showOpenDialog(win,{title:'Open Wicked asset pack',properties:['openFile'],filters:[{name:'Wicked assets',extensions:['json']}]});if(pick.canceled)return{ok:false,canceled:true};const res=m.importAssetPack(await fsp.readFile(pick.filePaths[0],'utf8'));return{ok:true,assets:res.assets,name:res.name};}
+    return{ok:true};
+  }catch(U){return{ok:false,error:String(U.message||U)};}
+});
+
+ipcMain.handle("v24:loaders",async(J,r)=>{
+  try{const m=await sharedModule('loaders');const action=r?.action||'list';
+    if(action==='list')return{ok:true,loaders:m.LOADER_TYPES,apis:m.GRAPHICS_APIS,flags:m.COMPAT_FLAGS};
+    if(action==='detect'){const d=m.detectLoaderHints(r?.text||'');return{ok:true,...d};}
+    if(action==='profile'){const p=m.makeProfile({loader:r.loader,api:r.api,flags:r.flags||[],language:r.language,name:r.name});return{ok:true,profile:p,checklist:m.compatibilityChecklist(p)};}
+    return{ok:true};
+  }catch(U){return{ok:false,error:String(U.message||U)};}
+});
+

@@ -141,6 +141,8 @@ void Login(const char* userField, const char* passField, const char* user,
 void KeyLogin(const char* keyField, const char* keys, const char* page, const char* error);
 void Toggle(const char* target);
 void OpenUrl(const char* url);
+void Webhook(const char* url, const char* payload, const char* method);
+void Discord(const char* url, const char* message, const char* username);
 void Run(const char* path);
 void Copy(const char* text);
 void Minimize();

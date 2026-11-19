@@ -301,6 +301,8 @@ impl Kavro {
     }
     pub fn toggle(&mut self, target: &str) { let _ = target; }
     pub fn open_url(&mut self, url: &str) { let _ = url; }
+    pub fn webhook(&mut self, url: &str, payload: &str, method: &str) { let _ = (url, payload, method); }
+    pub fn discord(&mut self, url: &str, message: &str, username: &str) { let _ = (url, message, username); }
     pub fn run(&mut self, path: &str) { let _ = path; }
     pub fn copy(&mut self, text: &str) { let _ = text; }
     pub fn minimize(&mut self) {}
