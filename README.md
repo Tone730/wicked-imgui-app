@@ -103,8 +103,8 @@ The shipped portable build is **unsigned** and hash-verified. `sign.ps1` will si
 - The legacy `.kavro` project filename and old config folder are still read for backward compatibility. They are not shown as branding in the product UI.
 - Account/licensing is local-only; sign-in, redeem and usage statistics make no network calls. Update checks use only the self-hosted feed URL baked into `app\update-feed.json` (or `WICKED_UPDATE_URL` at runtime). With no published URL, Settings → About reports “Update feed not configured — this portable build works fully offline.”
 - AI works offline out of the box through Wicked Local. Ollama on `http://localhost:11434` also works offline with a local model; Google Gemini, AiHubMix, OpenRouter, NVIDIA, Anthropic, and OpenAI are optional and need their own keys/network.
-- The bundled runtime sources are compatibility stubs: export produces a complete source tree, but native compilation needs the full ImGui/vendor runtime and local toolchains. Settings → Build & run displays this disclosure in-product.
-- Packaged PE version resources are rewritten from `app/package.json`; Windows file and product version metadata now match the released version (currently 2.2.0).
+- The bundled runtime sources are offline compatibility stubs: export produces a complete source tree that compiles and runs with local toolchains (C++ DX11/DX9/DX12/OpenGL3/Vulkan, C#, Rust), but real ImGui rendering needs the full vendor runtime. Settings → Build & run displays this disclosure in-product.
+- Packaged PE version resources are rewritten from `app/package.json`; Windows file and product version metadata now match the released version (currently 2.2.1).
 
 ## One-command publish
 

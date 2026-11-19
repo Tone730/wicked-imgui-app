@@ -6,6 +6,22 @@ newest `## [<version>]` section below. Every `- [Tag] text` bullet becomes one
 When a section for the version being published does not exist, the pipeline keeps
 the existing `changes` array unchanged.
 
+## [2.2.1] - 2026-11-19
+
+- [Fix] Fixed an atomic config-save race on first launch that could fail with `ENOENT` when two writes reused `config.json.tmp`.
+- [Export] Fixed the exported Rust stub so `macro_rules!` is declared at module scope and compiles with current `rustc`.
+- [Quality] All exported runtime stubs (C++ DX11/DX9/DX12/OpenGL3/Vulkan, C#, Rust) now compile and run cleanly with local toolchains; 455 regression checks and 52 server tests pass.
+
+## [2.2.0] - 2026-11-18
+
+- [Editor] Zoom presets, a PNG canvas snapshot button, toggleable rulers, and grouped widget selection with real hierarchy parenting and ungrouping.
+- [Editor] Bulk lock, hide, nudge, group, and offset edits from the inspector and command palette.
+- [Local AI] Offline intents now duplicate widgets, align/distribute, apply style presets, attach actions, and generate complete pages (login, settings, dashboards).
+- [Export] Single-file interactive HTML mockups, portable theme JSON import/export, and project bundles with embedded assets.
+- [Safety] Source export now previews line-level diffs, warns before overwrites, writes SOURCE-DIFF.txt, and backs up every replaced file.
+- [Commands] Global and editor command palettes expose all new editor power tools and portability actions.
+- [Quality] Functional regression suite expanded to 455 checks; static validation covers the new modules and IPC channels.
+
 ## [2.1.0] - 2026-11-18
 
 - [Widgets] Added 8 more design widgets — icon button, divider, stat card, tag input, password, search box, sparkline and status bar — bringing the palette to 42 widgets with live previews and C++/C#/Rust export.

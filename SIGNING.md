@@ -2,7 +2,7 @@
 
 ## Current state (honest)
 
-- The published `v2.2.0` build is a **portable ZIP**, not a signed installer.
+- The published `v2.2.1` build is a **portable ZIP**, not a signed installer.
 - It is published with a SHA-256 and SHA-512 in `latest.json` / `latest.yml`, and the updater verifies those hashes before opening the download folder.
 - There is **no Authenticode certificate configured**. Windows SmartScreen and some antivirus products may warn. The app does not claim a silent install.
 - ASAR integrity and Electron fuses are enabled in the shipped EXE. These verify internal app files, not publisher identity.
