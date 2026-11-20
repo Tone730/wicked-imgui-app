@@ -3,10 +3,11 @@
 // Uses the website's generated downloads/latest.json and the attached ZIP.
 
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { createUpdater, cmpVersion } = require('./app/src/main/updater.cjs');
+const { createUpdater, cmpVersion, signedMessage } = require('./app/src/main/updater.cjs');
 
 const site = path.join(__dirname, '..', 'wicked-imgui');
 const manifestPath = path.join(site, 'downloads', 'latest.json');
@@ -98,6 +99,33 @@ async function main() {
     state = await insecureAsset.check();
     assert.equal(state.status, 'error', 'plaintext remote download URL is rejected');
     assert.equal(state.error, 'insecure_url');
+
+    // Feed authenticity: a pinned build requires a valid signatureV2.
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+    const pin = publicKey.export({ format: 'jwk' }).x;
+    const baseFeed = { ...manifest };
+    delete baseFeed.signatureV2;
+    const signFeed = (feed) => ({ ...feed,
+      signatureV2: crypto.sign(null, Buffer.from(signedMessage(feed)), privateKey).toString('base64url'),
+    });
+    const signedFeed = signFeed(baseFeed);
+    const feedFetch = (feed) => async () => ({ ok: true, json: async () => feed });
+    const pinned = (feed, dir) => createUpdater({
+      feedUrl, currentVersion: '1.0.0', dataDir: path.join(tmp, dir),
+      publicKey: pin, fetch: feedFetch(feed),
+    });
+
+    state = await pinned(signedFeed, 'signed').check();
+    assert.equal(state.status, 'available', 'valid signed feed is accepted');
+    state = await pinned(baseFeed, 'unsigned').check();
+    assert.equal(state.error, 'bad_signature', 'pinned build rejects an unsigned feed');
+    state = await pinned({ ...signedFeed, sha256: '0'.repeat(64) }, 'tampered').check();
+    assert.equal(state.error, 'bad_signature', 'pinned build rejects a tampered feed');
+    state = await createUpdater({
+      feedUrl, currentVersion: '1.0.0', dataDir: path.join(tmp, 'legacy'),
+      fetch: feedFetch(baseFeed),
+    }).check();
+    assert.equal(state.status, 'available', 'unpinned legacy build still accepts an unsigned feed');
 
     console.log('updater runtime tests passed');
   } finally {

@@ -20,6 +20,11 @@ const FETCH_TIMEOUT_MS = 9000;
 const releaseMessage = (r) =>
   'wicked-release-v2\n' + r.version + '\n' + r.sha256 + '\n' + r.size;
 
+// v3 message for feed authenticity. `signatureV2` is a separate field so older
+// pinned builds (which only look for `signature`) keep updating normally.
+const signedMessage = (r) =>
+  'wicked-release-v3\n' + r.version + '\n' + r.sha256 + '\n' + r.bytes;
+
 function cmpVersion(a, b) {
   const x = String(a || '0').split('.').map(Number);
   const y = String(b || '0').split('.').map(Number);
@@ -111,11 +116,14 @@ function createUpdater(options) {
   }
 
   function verifySignature(release) {
-    if (!release.signature || !opts.publicKey) return true;
+    // No pinned key: legacy compatibility. Pinned build: require a valid
+    // signatureV2 — an unsigned or tampered feed must fail, not silently pass.
+    if (!opts.publicKey) return true;
+    if (!release.signatureV2) return false;
     try {
       const jwk = { kty: 'OKP', crv: 'Ed25519', x: opts.publicKey };
       const key = crypto.createPublicKey({ key: jwk, format: 'jwk' });
-      return crypto.verify(null, Buffer.from(releaseMessage(release)), key, Buffer.from(String(release.signature), 'base64url'));
+      return crypto.verify(null, Buffer.from(signedMessage(release)), key, Buffer.from(String(release.signatureV2), 'base64url'));
     } catch { return false; }
   }
 
@@ -159,6 +167,7 @@ function createUpdater(options) {
       channel: String(raw.channel || 'stable'),
       kind: String(raw.kind || (/\.zip$/i.test(file) ? 'Portable build' : 'Installer')),
       signature: raw.signature || '',
+      signatureV2: raw.signatureV2 || '',
       required: !!(data && data.required) || !!raw.required,
       announcement: (data && data.announcement) || raw.announcement || null,
     };
@@ -217,7 +226,7 @@ function createUpdater(options) {
         downloaded = found;
         const newer = cmpVersion(release.version, currentVersion) > 0;
         const portable = /zip|portable/i.test(release.kind + ' ' + path.extname(release.file));
-        const canSilentInstall = !!opts.launch && !portable && !!release.signature && verifySignature(release);
+        const canSilentInstall = !!opts.launch && !portable && !!release.signatureV2 && verifySignature(release);
 
         set({
           status: newer ? (found ? 'ready' : 'available') : 'latest',
@@ -377,4 +386,4 @@ function createUpdater(options) {
   };
 }
 
-module.exports = { createUpdater, cmpVersion, releaseMessage };
+module.exports = { createUpdater, cmpVersion, releaseMessage, signedMessage };
