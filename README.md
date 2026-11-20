@@ -116,9 +116,23 @@ node visual-regression.mjs --update   # regenerate PNG baselines after an intent
 
 `node regression.mjs` folds in the visual-regression baselines, so a palette or label
 drift fails the main gate even when only the functional suite is run. `npm test`
-(calling `qa.mjs`) adds static validation, updater tests, server API tests and
-generated-export compile checks. Baseline changes must be deliberate: update them
-with `--update`, then re-run `npm test` before publishing.
+(calling `qa.mjs`) adds static validation, updater tests, server API tests, the AI
+intent-contract guard and generated-export compile checks. Baseline changes must be
+deliberate: update them with `--update`, then re-run `npm test` before publishing.
+
+There is also an **optional** real-browser screenshot layer. It is not part of
+`npm test` and needs Playwright + Chromium, which are never build dependencies:
+
+```
+npm i -D playwright && npx playwright install chromium   # one-off, opt-in
+npm run browser:update   # generate baselines in snapshots/browser/ on this machine
+npm run test:browser     # verify (prints SKIP and exits 0 if no browser is installed)
+```
+
+It screenshots a few representative kit boards as real DOM/CSS in headless Chromium
+and compares them to PNG baselines, complementing the dependency-free 118-board gate.
+Baselines are machine-specific because fonts differ, so regenerate them on the target
+machine. Set `BROWSER_EXECUTABLE` to drive a system Chrome/Edge instead of a download.
 
 ## One-command publish
 
